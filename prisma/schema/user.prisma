@@ -1,0 +1,32 @@
+model User {
+  id               String            @id @default(uuid())
+  email            String            @unique
+  name             String
+  passwordHash     String?
+  role             UserRole          @default(CANDIDATE)
+  companyId        String?
+  provider         String            @default("email")
+  isActive         Boolean           @default(true)
+  status           UserStatus        @default(ACTIVE)
+  deletedAt        DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  company          Company?          @relation(fields: [companyId], references: [id])
+  candidateProfile CandidateProfile?
+  attempts         Attempt[]
+  invitations      Invitation[]      @relation("CandidateInvitations")
+  auditLogs        AuditLog[]
+
+  @@index([email])
+}
+
+model CandidateProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  headline  String?
+  resumeUrl String?
+  skills    String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

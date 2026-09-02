@@ -1,0 +1,41 @@
+model Problem {
+  id                 String              @id @default(uuid())
+  companyId          String?
+  type               ProblemType
+  title              String
+  description        String              @db.Text
+  points             Int
+  deletedAt          DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  company            Company?            @relation(fields: [companyId], references: [id])
+  testCases          TestCase[]
+  mcqOptions         McqOption[]
+  assessmentProblems AssessmentProblem[]
+  submissions        Submission[]
+
+  @@index([companyId])
+}
+
+model TestCase {
+  id             String   @id @default(uuid())
+  problemId      String
+  input          String   @db.Text
+  expectedOutput String   @db.Text
+  isHidden       Boolean  @default(false)
+  weight         Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  problem        Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+}
+
+model McqOption {
+  id        String   @id @default(uuid())
+  problemId String
+  text      String
+  isCorrect Boolean  @default(false)
+  order     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+}

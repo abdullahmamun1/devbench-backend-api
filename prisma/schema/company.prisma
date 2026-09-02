@@ -1,0 +1,51 @@
+model Company {
+  id                 String              @id @default(uuid())
+  companyName        String
+  creditBalance      Int                 @default(0)
+  deletedAt          DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  users              User[]
+  problems           Problem[]
+  assessments        Assessment[]
+  teamInvitations    TeamInvitation[]
+  payments           Payment[]
+  creditTransactions CreditTransaction[]
+}
+
+model TeamInvitation {
+  id        String               @id @default(uuid())
+  companyId String
+  email     String
+  role      UserRole
+  token     String               @unique
+  status    TeamInvitationStatus @default(PENDING)
+  expiresAt DateTime
+  createdAt DateTime             @default(now())
+  company   Company              @relation(fields: [companyId], references: [id])
+
+  @@index([token])
+}
+
+model Payment {
+  id               String        @id @default(uuid())
+  companyId        String
+  stripeSessionId  String        @unique
+  amount           Int
+  status           PaymentStatus @default(PENDING)
+  creditsPurchased Int
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  company          Company       @relation(fields: [companyId], references: [id])
+}
+
+model CreditTransaction {
+  id           String                @id @default(uuid())
+  companyId    String
+  type         CreditTransactionType
+  amount       Int
+  balanceAfter Int
+  referenceId  String?
+  createdAt    DateTime              @default(now())
+  company      Company               @relation(fields: [companyId], references: [id])
+}

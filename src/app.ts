@@ -1,0 +1,36 @@
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import express, {
+  type Application,
+  type Request,
+  type Response,
+} from "express";
+import helmet from "helmet";
+import config from "./config";
+import { handler as authHandler } from "./lib/auth.js";
+import { globalErrorHandler } from "./middleware/globalErrorHandler";
+import { notFound } from "./middleware/notFound";
+
+const app: Application = express();
+
+app.use("/api/v1/payments/webhook", express.raw({ type: "application/json" }));
+app.use(helmet());
+app.use("/api/v1/auth", authHandler);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: config.app_url,
+    credentials: true,
+  }),
+);
+
+app.get("/", (req: Request, res: Response) => {
+  res.send("DevBench API is running");
+});
+
+app.use(notFound);
+app.use(globalErrorHandler);
+
+export default app;

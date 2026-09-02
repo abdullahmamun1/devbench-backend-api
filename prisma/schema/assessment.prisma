@@ -1,0 +1,47 @@
+model Assessment {
+  id                 String              @id @default(uuid())
+  companyId          String
+  title              String
+  description        String?             @db.Text
+  durationMinutes    Int
+  passingScore       Int
+  status             AssessmentStatus    @default(DRAFT)
+  deletedAt          DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  company            Company             @relation(fields: [companyId], references: [id])
+  assessmentProblems AssessmentProblem[]
+  invitations        Invitation[]
+  attempts           Attempt[]
+}
+
+model AssessmentProblem {
+  id           String     @id @default(uuid())
+  assessmentId String
+  problemId    String
+  order        Int
+  points       Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  problem      Problem    @relation(fields: [problemId], references: [id])
+
+  @@unique([assessmentId, problemId])
+}
+
+model Invitation {
+  id             String           @id @default(uuid())
+  assessmentId   String
+  candidateEmail String
+  candidateId    String?
+  token          String           @unique
+  status         InvitationStatus @default(PENDING)
+  expiresAt      DateTime
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  assessment     Assessment       @relation(fields: [assessmentId], references: [id])
+  candidate      User?            @relation("CandidateInvitations", fields: [candidateId], references: [id])
+
+  @@unique([assessmentId, candidateEmail])
+  @@index([token])
+}

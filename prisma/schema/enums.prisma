@@ -1,0 +1,66 @@
+enum UserRole {
+  CANDIDATE
+  COMPANY_OWNER
+  ASSESSMENT_CREATOR
+  EVALUATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum AssessmentStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum ProblemType {
+  CODING
+  MCQ
+  WRITTEN
+}
+
+enum SubmissionResultStatus {
+  PASSED
+  FAILED
+  PARTIAL
+  PENDING_REVIEW
+}
+
+enum CreditTransactionType {
+  PURCHASE
+  DEDUCTION
+  REFUND
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum TeamInvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum AttemptStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}

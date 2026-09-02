@@ -1,0 +1,47 @@
+model Attempt {
+  id           String        @id @default(uuid())
+  assessmentId String
+  candidateId  String
+  status       AttemptStatus @default(NOT_STARTED)
+  startedAt    DateTime?
+  expiresAt    DateTime?
+  totalScore   Int?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  assessment   Assessment    @relation(fields: [assessmentId], references: [id])
+  candidate    User          @relation(fields: [candidateId], references: [id])
+  submissions  Submission[]
+
+  @@unique([assessmentId, candidateId])
+  @@index([assessmentId, candidateId])
+}
+
+model Submission {
+  id               String            @id @default(uuid())
+  attemptId        String
+  problemId        String
+  answerText       String?           @db.Text
+  code             String?           @db.Text
+  language         String?
+  submittedAt      DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  attempt          Attempt           @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  problem          Problem           @relation(fields: [problemId], references: [id])
+  submissionResult SubmissionResult?
+
+  @@unique([attemptId, problemId])
+}
+
+model SubmissionResult {
+  id           String                 @id @default(uuid())
+  submissionId String                 @unique
+  score        Int                    @default(0)
+  maxScore     Int
+  status       SubmissionResultStatus
+  feedback     String?                @db.Text
+  evaluatedBy  String?
+  evaluatedAt  DateTime?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  submission   Submission             @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+}
