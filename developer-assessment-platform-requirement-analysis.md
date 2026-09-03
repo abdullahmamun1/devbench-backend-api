@@ -34,7 +34,8 @@
 |---|:---:|:---:|:---:|:---:|:---:|
 | Register/login (email or Google) | ✅ | ✅ | ❌ (invited only) | ❌ (invited only) | ❌ (seeded only) |
 | Invite team members | ❌ | ✅ | ❌ | ❌ | ❌ |
-| Manage company problem bank | ❌ | ✅ | ✅ | ❌ | ✅ (global/curated) |
+| View company problem bank (read) | ❌ (only via active attempt) | ✅ | ✅ | ✅ (read-only) | ✅ (all + global) |
+| Create/edit/delete problems (write) | ❌ | ✅ | ✅ | ❌ | ✅ (global/curated only) |
 | Create/publish assessment | ❌ | ✅ | ✅ | ❌ | ❌ |
 | Invite candidates | ❌ | ✅ | ✅ | ❌ | ❌ |
 | Attempt an assessment | ✅ (if invited) | ❌ | ❌ | ❌ | ❌ |
@@ -139,6 +140,7 @@ AuditLog references any actor (User) + any entity, independently
 - Score = Σ(problem points × pass ratio) across all problems in the attempt, computed once on submission and never recalculated retroactively if problems change later.
 - Only users belonging to the owning `Company` can read that company's `Problem`, `Assessment`, `Invitation`, and `Attempt` data (row-level `companyId` check in every query, not just at the route level) — but only `Company Owner` and `Assessment Creator` can *write* Problems/Assessments/Invitations, and only `Company Owner` and `Evaluator` can write `SubmissionResult` overrides.
 - Only the `Company Owner` can send team invitations, purchase credits, or manage billing — `Assessment Creator` and `Evaluator` cannot touch the company's Stripe/credit data even though they share the same tenant.
+- Candidates never hit `GET /problems` or `GET /problems/:id` directly — problem content (statement, options, or test cases minus hidden ones) is delivered only through the active-attempt endpoints, scoped to problems attached to that specific assessment, so nothing is browsable ahead of time.
 
 ---
 

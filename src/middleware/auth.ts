@@ -8,10 +8,11 @@ import { createError } from "../utils/createError";
 import { jwtUtils } from "../utils/jwt";
 
 export interface RequestUser {
-	email: string;
-	name: string;
 	userId: string;
+	name: string;
+	email: string;
 	role: UserRole;
+	companyId?: string | null;
 }
 
 declare global {
@@ -23,49 +24,52 @@ declare global {
 }
 
 export const auth = (...requiredRoles: UserRole[]) => {
-	return catchAsync(async (req: Request, _res: Response, next: NextFunction) => {
-		const token = req.cookies.accessToken
-			? req.cookies.accessToken
-			: req.headers.authorization?.startsWith("Bearer ")
-				? req.headers.authorization?.split(" ")[1]
-				: req.headers.authorization;
-		if (!token) {
-			throw createError(401, "No token provided");
-		}
-		const verifiedToken = jwtUtils.verifyToken(
-			token,
-			config.jwt_access_secret,
-		);
-
-		if (!verifiedToken.success) {
-			throw createError(401, verifiedToken.error || "Invalid token");
-		}
-		const { id } = verifiedToken.data as JwtPayload;
-		const user = await prisma.user.findUnique({
-			where: {
-				id,
-			},
-		});
-		if (!user) {
-			throw createError(404, "User not found");
-		}
-		if (user.status === "SUSPENDED") {
-			throw createError(403, "Your account is suspended");
-		}
-		if (requiredRoles.length && !requiredRoles.includes(user.role)) {
-			throw createError(
-				403,
-				"You do not have permission to access this resource",
+	return catchAsync(
+		async (req: Request, _res: Response, next: NextFunction) => {
+			const token = req.cookies.accessToken
+				? req.cookies.accessToken
+				: req.headers.authorization?.startsWith("Bearer ")
+					? req.headers.authorization?.split(" ")[1]
+					: req.headers.authorization;
+			if (!token) {
+				throw createError(401, "No token provided");
+			}
+			const verifiedToken = jwtUtils.verifyToken(
+				token,
+				config.jwt_access_secret,
 			);
-		}
 
-		req.user = {
-			userId: user.id,
-			name: user.name,
-			email: user.email,
-			role: user.role,
-		};
+			if (!verifiedToken.success) {
+				throw createError(401, verifiedToken.error || "Invalid token");
+			}
+			const { id } = verifiedToken.data as JwtPayload;
+			const user = await prisma.user.findUnique({
+				where: {
+					id,
+				},
+			});
+			if (!user) {
+				throw createError(404, "User not found");
+			}
+			if (user.status === "SUSPENDED") {
+				throw createError(403, "Your account is suspended");
+			}
+			if (requiredRoles.length && !requiredRoles.includes(user.role)) {
+				throw createError(
+					403,
+					"You do not have permission to access this resource",
+				);
+			}
 
-		next();
-	});
+			req.user = {
+				userId: user.id,
+				name: user.name,
+				email: user.email,
+				role: user.role,
+				companyId: user.companyId,
+			};
+
+			next();
+		},
+	);
 };
