@@ -1,0 +1,531 @@
+{
+	"info": {
+		"name": "DevBench Backend",
+		"description": "Covers all implemented modules: Auth, User, Problem Bank, Company. Login requests auto-save accessToken/refreshToken into collection variables for chained requests.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{ "key": "baseUrl", "value": "http://localhost:5000/api/v1" },
+		{ "key": "adminAccessToken", "value": "" },
+		{ "key": "companyOwnerAccessToken", "value": "" },
+		{ "key": "assessmentCreatorAccessToken", "value": "" },
+		{ "key": "evaluatorAccessToken", "value": "" },
+		{ "key": "candidateAccessToken", "value": "" },
+		{ "key": "candidateRefreshToken", "value": "" },
+		{ "key": "adminEmail", "value": "" },
+		{ "key": "adminPassword", "value": "" },
+		{ "key": "companyOwnerEmail", "value": "" },
+		{ "key": "companyOwnerPassword", "value": "" },
+		{ "key": "assessmentCreatorEmail", "value": "" },
+		{ "key": "assessmentCreatorPassword", "value": "" },
+		{ "key": "evaluatorEmail", "value": "" },
+		{ "key": "evaluatorPassword", "value": "" },
+		{ "key": "candidateEmail", "value": "" },
+		{ "key": "candidatePassword", "value": "" },
+		{ "key": "problemId", "value": "" },
+		{ "key": "otherCompanyProblemId", "value": "" },
+		{ "key": "teamInviteToken", "value": "" }
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register - Candidate",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Candidate\",\n  \"email\": \"test.candidate@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"CANDIDATE\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Register - Company Owner",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Owner\",\n  \"email\": \"test.owner@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"COMPANY_OWNER\",\n  \"companyName\": \"Test Company\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Login - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res?.data?.accessToken) {",
+									"    pm.collectionVariables.set('adminAccessToken', res.data.accessToken);",
+									"}",
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Login - Company Owner",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res?.data?.accessToken) {",
+									"    pm.collectionVariables.set('companyOwnerAccessToken', res.data.accessToken);",
+									"}",
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{companyOwnerEmail}}\",\n  \"password\": \"{{companyOwnerPassword}}\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Login - Assessment Creator",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res?.data?.accessToken) {",
+									"    pm.collectionVariables.set('assessmentCreatorAccessToken', res.data.accessToken);",
+									"}",
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{assessmentCreatorEmail}}\",\n  \"password\": \"{{assessmentCreatorPassword}}\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Login - Evaluator",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res?.data?.accessToken) {",
+									"    pm.collectionVariables.set('evaluatorAccessToken', res.data.accessToken);",
+									"}",
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{evaluatorEmail}}\",\n  \"password\": \"{{evaluatorPassword}}\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Login - Candidate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res?.data?.accessToken) {",
+									"    pm.collectionVariables.set('candidateAccessToken', res.data.accessToken);",
+									"}",
+									"if (res?.data?.refreshToken) {",
+									"    pm.collectionVariables.set('candidateRefreshToken', res.data.refreshToken);",
+									"}",
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{candidateEmail}}\",\n  \"password\": \"{{candidatePassword}}\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res?.data?.accessToken) {",
+									"    pm.collectionVariables.set('candidateAccessToken', res.data.accessToken);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": { "raw": "{{baseUrl}}/auth/refresh-token", "host": ["{{baseUrl}}"], "path": ["auth", "refresh-token"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{candidateRefreshToken}}\"\n}"
+						},
+						"description": "Body token is only needed if cookies aren't being used by the client. Postman will also send the refreshToken cookie automatically if login was called in the same session."
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{candidateAccessToken}}" }],
+						"url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] }
+					}
+				},
+				{
+					"name": "Update My Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{candidateAccessToken}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"headline\": \"Full Stack Developer\",\n  \"skills\": [\"TypeScript\", \"React\", \"Node.js\"]\n}"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Problem Bank",
+			"item": [
+				{
+					"name": "Create Problem (CODING) - Assessment Creator",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const res = pm.response.json();",
+									"    pm.collectionVariables.set('problemId', res.data.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"url": { "raw": "{{baseUrl}}/problems", "host": ["{{baseUrl}}"], "path": ["problems"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Two Sum\",\n  \"description\": \"Given an array of integers, return indices of the two numbers that add up to a target.\",\n  \"type\": \"CODING\",\n  \"points\": 10,\n  \"testCases\": [\n    { \"input\": \"[2,7,11,15], 9\", \"expectedOutput\": \"[0,1]\", \"isHidden\": false, \"weight\": 1 },\n    { \"input\": \"[3,2,4], 6\", \"expectedOutput\": \"[1,2]\", \"isHidden\": true, \"weight\": 1 }\n  ]\n}"
+						}
+					}
+				},
+				{
+					"name": "Create Problem (MCQ) - Company Owner",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{companyOwnerAccessToken}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"url": { "raw": "{{baseUrl}}/problems", "host": ["{{baseUrl}}"], "path": ["problems"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"What is a closure?\",\n  \"description\": \"Pick the best definition of a closure in JavaScript.\",\n  \"type\": \"MCQ\",\n  \"points\": 5,\n  \"mcqOptions\": [\n    { \"text\": \"A function bundled with its lexical scope\", \"isCorrect\": true, \"order\": 1 },\n    { \"text\": \"A loop that never ends\", \"isCorrect\": false, \"order\": 2 },\n    { \"text\": \"A type of async callback\", \"isCorrect\": false, \"order\": 3 }\n  ]\n}"
+						}
+					},
+					"description": "Expect 201. Verifies the COMPANY_OWNER RBAC fix."
+				},
+				{
+					"name": "Get All Problems - Assessment Creator",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" }],
+						"url": {
+							"raw": "{{baseUrl}}/problems?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["problems"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Problem By Id - Assessment Creator",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" }],
+						"url": { "raw": "{{baseUrl}}/problems/{{problemId}}", "host": ["{{baseUrl}}"], "path": ["problems", "{{problemId}}"] }
+					}
+				},
+				{
+					"name": "Update Problem - Assessment Creator",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"url": { "raw": "{{baseUrl}}/problems/{{problemId}}", "host": ["{{baseUrl}}"], "path": ["problems", "{{problemId}}"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"points\": 15\n}"
+						}
+					}
+				},
+				{
+					"name": "Delete Problem - Assessment Creator",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" }],
+						"url": { "raw": "{{baseUrl}}/problems/{{problemId}}", "host": ["{{baseUrl}}"], "path": ["problems", "{{problemId}}"] }
+					}
+				},
+				{
+					"name": "[Negative] Candidate GET /problems -> expect 403",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{candidateAccessToken}}" }],
+						"url": { "raw": "{{baseUrl}}/problems", "host": ["{{baseUrl}}"], "path": ["problems"] }
+					}
+				},
+				{
+					"name": "[Negative] Candidate GET /problems/:id -> expect 403",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{candidateAccessToken}}" }],
+						"url": { "raw": "{{baseUrl}}/problems/{{problemId}}", "host": ["{{baseUrl}}"], "path": ["problems", "{{problemId}}"] }
+					}
+				},
+				{
+					"name": "[Negative] Cross-company PATCH -> expect 404",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/problems/{{otherCompanyProblemId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["problems", "{{otherCompanyProblemId}}"]
+						},
+						"body": { "mode": "raw", "raw": "{\n  \"points\": 99\n}" },
+						"description": "Set otherCompanyProblemId to a problem id owned by a different company (e.g. create one while logged in as a second COMPANY_OWNER). Confirms the IDOR fix."
+					}
+				},
+				{
+					"name": "[Negative] Cross-company DELETE -> expect 404",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" }],
+						"url": {
+							"raw": "{{baseUrl}}/problems/{{otherCompanyProblemId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["problems", "{{otherCompanyProblemId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Company",
+			"item": [
+				{
+					"name": "Create Company (self-serve)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{candidateAccessToken}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"url": { "raw": "{{baseUrl}}/companies", "host": ["{{baseUrl}}"], "path": ["companies"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyName\": \"Newly Registered Co\"\n}"
+						},
+						"description": "Any authenticated user with no companyId yet can call this; it promotes them to COMPANY_OWNER. Expect 400 if the token belongs to a user who already has a companyId (e.g. the seeded company owner)."
+					}
+				},
+				{
+					"name": "Get My Company - Company Owner",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{companyOwnerAccessToken}}" }],
+						"url": { "raw": "{{baseUrl}}/companies/me", "host": ["{{baseUrl}}"], "path": ["companies", "me"] }
+					}
+				},
+				{
+					"name": "Get My Company - Assessment Creator",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" }],
+						"url": { "raw": "{{baseUrl}}/companies/me", "host": ["{{baseUrl}}"], "path": ["companies", "me"] }
+					}
+				},
+				{
+					"name": "Update My Company - Company Owner",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{companyOwnerAccessToken}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"url": { "raw": "{{baseUrl}}/companies/me", "host": ["{{baseUrl}}"], "path": ["companies", "me"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyName\": \"Renamed Company Inc.\"\n}"
+						}
+					}
+				},
+				{
+					"name": "[Negative] Update My Company - Assessment Creator -> expect 403",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"url": { "raw": "{{baseUrl}}/companies/me", "host": ["{{baseUrl}}"], "path": ["companies", "me"] },
+						"body": { "mode": "raw", "raw": "{\n  \"companyName\": \"Should Fail\"\n}" }
+					}
+				},
+				{
+					"name": "Get Credits - Company Owner",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{companyOwnerAccessToken}}" }],
+						"url": { "raw": "{{baseUrl}}/companies/credits", "host": ["{{baseUrl}}"], "path": ["companies", "credits"] }
+					}
+				},
+				{
+					"name": "[Negative] Get Credits - Assessment Creator -> expect 403",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" }],
+						"url": { "raw": "{{baseUrl}}/companies/credits", "host": ["{{baseUrl}}"], "path": ["companies", "credits"] }
+					}
+				},
+				{
+					"name": "[Negative] Get Credits - Evaluator -> expect 403",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{evaluatorAccessToken}}" }],
+						"url": { "raw": "{{baseUrl}}/companies/credits", "host": ["{{baseUrl}}"], "path": ["companies", "credits"] }
+					}
+				},
+				{
+					"name": "Invite Team Member - Company Owner",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{companyOwnerAccessToken}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"url": { "raw": "{{baseUrl}}/companies/team/invite", "host": ["{{baseUrl}}"], "path": ["companies", "team", "invite"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"new.teammate@example.com\",\n  \"role\": \"ASSESSMENT_CREATOR\"\n}"
+						},
+						"description": "Sends an email with the invite link. Copy the token from the emailed link (or your mail catcher/logs) into the teamInviteToken collection variable."
+					}
+				},
+				{
+					"name": "[Negative] Invite Team Member - Assessment Creator -> expect 403",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"url": { "raw": "{{baseUrl}}/companies/team/invite", "host": ["{{baseUrl}}"], "path": ["companies", "team", "invite"] },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"nope@example.com\",\n  \"role\": \"EVALUATOR\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Accept Team Invitation (new user)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": {
+							"raw": "{{baseUrl}}/companies/team/accept/{{teamInviteToken}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "team", "accept", "{{teamInviteToken}}"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"New Teammate\",\n  \"password\": \"password123\"\n}"
+						},
+						"description": "Registers + joins in one step for someone with no existing account. For an existing logged-in user accepting instead, send this with an Authorization header and an empty body."
+					}
+				}
+			]
+		}
+	]
+}

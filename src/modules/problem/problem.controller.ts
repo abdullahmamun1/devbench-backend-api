@@ -55,7 +55,11 @@ const getProblemById = catchAsync(async (req: Request, res: Response) => {
 
 const updateProblem = catchAsync(async (req: Request, res: Response) => {
 	const id = req.params.id as string;
-	const result = await problemService.updateProblem(id, req.body);
+	const caller: ICallerInfo = {
+		role: req.user!.role,
+		companyId: req.user!.companyId,
+	};
+	const result = await problemService.updateProblem(id, req.body, caller);
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
@@ -67,7 +71,11 @@ const updateProblem = catchAsync(async (req: Request, res: Response) => {
 
 const deleteProblem = catchAsync(async (req: Request, res: Response) => {
 	const id = req.params.id as string;
-	await problemService.deleteProblem(id);
+	const caller: ICallerInfo = {
+		role: req.user!.role,
+		companyId: req.user!.companyId,
+	};
+	await problemService.deleteProblem(id, caller);
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,

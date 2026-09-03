@@ -162,9 +162,17 @@ const getProblemById = async (id: string, caller: ICallerInfo) => {
 	return problem;
 };
 
-const updateProblem = async (id: string, payload: IUpdateProblemPayload) => {
+const updateProblem = async (
+	id: string,
+	payload: IUpdateProblemPayload,
+	caller: ICallerInfo,
+) => {
 	const existing = await prisma.problem.findFirst({
-		where: { id, deletedAt: null },
+		where: {
+			id,
+			deletedAt: null,
+			...(caller.role !== "ADMIN" && { companyId: caller.companyId ?? null }),
+		},
 	});
 
 	if (!existing) {
@@ -214,9 +222,13 @@ const updateProblem = async (id: string, payload: IUpdateProblemPayload) => {
 	});
 };
 
-const deleteProblem = async (id: string) => {
+const deleteProblem = async (id: string, caller: ICallerInfo) => {
 	const existing = await prisma.problem.findFirst({
-		where: { id, deletedAt: null },
+		where: {
+			id,
+			deletedAt: null,
+			...(caller.role !== "ADMIN" && { companyId: caller.companyId ?? null }),
+		},
 	});
 
 	if (!existing) {

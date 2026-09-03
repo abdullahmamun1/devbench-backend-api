@@ -26,11 +26,7 @@ router.patch(
 	companyController.updateCompany,
 );
 
-router.get(
-	"/credits",
-	auth("COMPANY_OWNER", "ASSESSMENT_CREATOR", "EVALUATOR"),
-	companyController.getCredits,
-);
+router.get("/credits", auth("COMPANY_OWNER"), companyController.getCredits);
 
 router.post(
 	"/team/invite",

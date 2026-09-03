@@ -8,25 +8,33 @@ const router = Router();
 
 router.post(
 	"/",
-	auth("ADMIN", "ASSESSMENT_CREATOR"),
+	auth("ADMIN", "COMPANY_OWNER", "ASSESSMENT_CREATOR"),
 	validateRequest(problemValidation.createProblemValidationSchema),
 	problemController.createProblem,
 );
 
-router.get("/", auth(), problemController.getAllProblems);
+router.get(
+	"/",
+	auth("ADMIN", "COMPANY_OWNER", "ASSESSMENT_CREATOR", "EVALUATOR"),
+	problemController.getAllProblems,
+);
 
-router.get("/:id", auth(), problemController.getProblemById);
+router.get(
+	"/:id",
+	auth("ADMIN", "COMPANY_OWNER", "ASSESSMENT_CREATOR", "EVALUATOR"),
+	problemController.getProblemById,
+);
 
 router.patch(
 	"/:id",
-	auth("ADMIN", "ASSESSMENT_CREATOR"),
+	auth("ADMIN", "COMPANY_OWNER", "ASSESSMENT_CREATOR"),
 	validateRequest(problemValidation.updateProblemValidationSchema),
 	problemController.updateProblem,
 );
 
 router.delete(
 	"/:id",
-	auth("ADMIN", "ASSESSMENT_CREATOR"),
+	auth("ADMIN", "COMPANY_OWNER", "ASSESSMENT_CREATOR"),
 	problemController.deleteProblem,
 );
 

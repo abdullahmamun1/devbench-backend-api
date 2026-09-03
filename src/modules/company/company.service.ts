@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import bcrypt from "bcryptjs";
 import config from "../../config";
 import { transporter } from "../../lib/nodemailer";
 import { prisma } from "../../lib/prisma";
@@ -9,7 +10,6 @@ import type {
 	IInviteTeamMemberPayload,
 	IUpdateCompanyPayload,
 } from "./company.interface";
-import bcrypt from "bcryptjs";
 
 const createCompany = async (
 	payload: ICreateCompanyPayload,
@@ -222,7 +222,7 @@ const acceptTeamInvitation = async (
 
 			const passwordHash = await bcrypt.hash(
 				registerPayload.password,
-				Number(process.env.BCRYPT_SALT_ROUNDS) || 10,
+				Number(config.bcrypt_salt_rounds) || 12,
 			);
 
 			const newUser = await tx.user.create({
