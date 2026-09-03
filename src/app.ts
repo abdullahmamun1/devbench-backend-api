@@ -1,9 +1,9 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, {
-  type Application,
-  type Request,
-  type Response,
+	type Application,
+	type Request,
+	type Response,
 } from "express";
 import helmet from "helmet";
 import config from "./config";
@@ -20,14 +20,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
-  cors({
-    origin: config.app_url,
-    credentials: true,
-  }),
+	cors({
+		origin: config.app_url,
+		credentials: true,
+	}),
 );
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("DevBench API is running");
+	res.send("DevBench API is running");
 });
 
 app.use(notFound);
