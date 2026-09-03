@@ -23,7 +23,7 @@ declare global {
 }
 
 export const auth = (...requiredRoles: UserRole[]) => {
-	return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+	return catchAsync(async (req: Request, _res: Response, next: NextFunction) => {
 		const token = req.cookies.accessToken
 			? req.cookies.accessToken
 			: req.headers.authorization?.startsWith("Bearer ")
@@ -32,10 +32,13 @@ export const auth = (...requiredRoles: UserRole[]) => {
 		if (!token) {
 			throw createError(401, "No token provided");
 		}
-		const verifiedToken = jwtUtils.verifyToken(token, config.jwt_access_secret);
+		const verifiedToken = jwtUtils.verifyToken(
+			token,
+			config.jwt_access_secret,
+		);
 
 		if (!verifiedToken.success) {
-			throw createError(401, verifiedToken.error);
+			throw createError(401, verifiedToken.error || "Invalid token");
 		}
 		const { id } = verifiedToken.data as JwtPayload;
 		const user = await prisma.user.findUnique({
