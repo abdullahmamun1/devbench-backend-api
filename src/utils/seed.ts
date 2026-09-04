@@ -36,6 +36,7 @@ export const seedAdmin = async () => {
 				passwordHash: hashedPassword,
 				role: UserRole.ADMIN,
 				status: "ACTIVE",
+				emailVerified: true
 			},
 		});
 
@@ -89,6 +90,7 @@ export const seedCompanyOwner = async () => {
 				role: UserRole.COMPANY_OWNER,
 				status: "ACTIVE",
 				companyId: company.id,
+				emailVerified: true
 			},
 		});
 
@@ -132,6 +134,7 @@ export const seedCandidate = async () => {
 				passwordHash: hashedPassword,
 				role: UserRole.CANDIDATE,
 				status: "ACTIVE",
+				emailVerified:true,
 				candidateProfile: {
 					create: {
 						headline: "Aspiring Full Stack Developer",
@@ -188,6 +191,7 @@ export const seedAssessmentCreator = async () => {
 				role: UserRole.ASSESSMENT_CREATOR,
 				status: "ACTIVE",
 				companyId: company.id,
+				emailVerified:true
 			},
 		});
 
@@ -238,6 +242,7 @@ export const seedEvaluator = async () => {
 				role: UserRole.EVALUATOR,
 				status: "ACTIVE",
 				companyId: company.id,
+				emailVerified:true
 			},
 		});
 

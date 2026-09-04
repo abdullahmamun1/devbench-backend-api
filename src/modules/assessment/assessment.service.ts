@@ -1,5 +1,6 @@
 import type { Prisma } from "../../../generated/prisma";
 import { prisma } from "../../lib/prisma";
+import { writeAuditLog } from "../../utils/auditLog";
 import { createError } from "../../utils/createError";
 import { resolveCompanyScope } from "../../utils/scoping";
 import type {
@@ -200,6 +201,14 @@ const deleteAssessment = async (id: string, caller: ICallerInfo) => {
 		},
 	});
 
+	await writeAuditLog({
+		actorId: caller.userId,
+		actorRole: caller.role,
+		action: "ASSESSMENT_DELETED",
+		entityType: "Assessment",
+		entityId: id,
+	});
+
 	return null;
 };
 
@@ -355,6 +364,16 @@ const publishAssessment = async (id: string, caller: ICallerInfo) => {
 			where: { id },
 			data: { status: "PUBLISHED" },
 		});
+		await writeAuditLog(
+			{
+				actorId: caller.userId,
+				actorRole: caller.role,
+				action: "ASSESSMENT_PUBLISHED",
+				entityType: "Assessment",
+				entityId: id,
+			},
+			tx,
+		);
 
 		return published;
 	});

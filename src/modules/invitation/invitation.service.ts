@@ -12,6 +12,7 @@ import type {
 	ICreateInvitationPayload,
 	IInvitationFilterQuery,
 } from "./invitation.interface";
+import { writeAuditLog } from "../../utils/auditLog";
 
 const createInvitation = async (
 	assessmentId: string,
@@ -103,6 +104,18 @@ const createInvitation = async (
 					referenceId: createdInvitation.id,
 				},
 			});
+
+			await writeAuditLog(
+				{
+					actorId: caller.userId,
+					actorRole: caller.role,
+					action: "INVITATION_SENT",
+					entityType: "Invitation",
+					entityId: createdInvitation.id,
+					metadata: { assessmentId, candidateEmail: payload.candidateEmail },
+				},
+				tx,
+			);
 
 			return {
 				invitation: createdInvitation,
@@ -301,6 +314,17 @@ const acceptInvitation = async (
 			where: { id: invitation.id },
 			data: { status: "ACCEPTED", candidateId },
 		});
+
+		await writeAuditLog(
+			{
+				actorId: candidateId,
+				actorRole: "CANDIDATE",
+				action: "INVITATION_ACCEPTED",
+				entityType: "Invitation",
+				entityId: invitation.id,
+			},
+			tx,
+		);
 
 		return tx.user.findUnique({
 			where: { id: candidateId },

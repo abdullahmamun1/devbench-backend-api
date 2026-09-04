@@ -7,6 +7,7 @@ import { problemService } from "./problem.service";
 
 const createProblem = catchAsync(async (req: Request, res: Response) => {
 	const caller: ICallerInfo = {
+		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};
@@ -22,6 +23,7 @@ const createProblem = catchAsync(async (req: Request, res: Response) => {
 
 const getAllProblems = catchAsync(async (req: Request, res: Response) => {
 	const caller: ICallerInfo = {
+		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};
@@ -39,6 +41,7 @@ const getAllProblems = catchAsync(async (req: Request, res: Response) => {
 
 const getProblemById = catchAsync(async (req: Request, res: Response) => {
 	const caller: ICallerInfo = {
+		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};
@@ -56,6 +59,7 @@ const getProblemById = catchAsync(async (req: Request, res: Response) => {
 const updateProblem = catchAsync(async (req: Request, res: Response) => {
 	const id = req.params.id as string;
 	const caller: ICallerInfo = {
+		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};
@@ -72,6 +76,7 @@ const updateProblem = catchAsync(async (req: Request, res: Response) => {
 const deleteProblem = catchAsync(async (req: Request, res: Response) => {
 	const id = req.params.id as string;
 	const caller: ICallerInfo = {
+		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};

@@ -41,6 +41,7 @@ export interface IProblemFilterQuery {
 }
 
 export interface ICallerInfo {
+	userId: string;
 	role: UserRole;
 	companyId?: string | null;
 }

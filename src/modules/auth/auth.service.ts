@@ -20,6 +20,7 @@ import type {
 	IResetPasswordPayload,
 	IVerifyEmailPayload,
 } from "./auth.interface";
+import { writeAuditLog } from "../../utils/auditLog";
 
 type UserWithCompany = Prisma.UserGetPayload<{ include: { company: true } }>;
 
@@ -582,6 +583,14 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
 	const updatedUser = await prisma.user.update({
 		where: { email: user.email },
 		data: { passwordHash },
+	});
+
+	await writeAuditLog({
+		actorId: user.id,
+		actorRole: user.role,
+		action: "PASSWORD_RESET",
+		entityType: "User",
+		entityId: user.id,
 	});
 
 	await redis.del(key);

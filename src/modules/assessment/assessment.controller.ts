@@ -10,6 +10,7 @@ import { assessmentService } from "./assessment.service";
 
 const createAssessment = catchAsync(async (req: Request, res: Response) => {
 	const caller: ICallerInfo = {
+		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};
@@ -26,6 +27,7 @@ const createAssessment = catchAsync(async (req: Request, res: Response) => {
 
 const getAllAssessments = catchAsync(async (req: Request, res: Response) => {
 	const caller: ICallerInfo = {
+		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};
@@ -47,6 +49,7 @@ const getAllAssessments = catchAsync(async (req: Request, res: Response) => {
 
 const getAssessmentById = catchAsync(async (req: Request, res: Response) => {
 	const caller: ICallerInfo = {
+		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};
@@ -64,6 +67,7 @@ const getAssessmentById = catchAsync(async (req: Request, res: Response) => {
 
 const updateAssessment = catchAsync(async (req: Request, res: Response) => {
 	const caller: ICallerInfo = {
+		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};
@@ -81,6 +85,7 @@ const updateAssessment = catchAsync(async (req: Request, res: Response) => {
 
 const deleteAssessment = catchAsync(async (req: Request, res: Response) => {
 	const caller: ICallerInfo = {
+		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};
@@ -99,6 +104,7 @@ const deleteAssessment = catchAsync(async (req: Request, res: Response) => {
 const attachProblem = catchAsync(async (req: Request, res: Response) => {
 	const assessmentId = req.params.id as string;
 	const caller: ICallerInfo = {
+		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};
@@ -121,6 +127,7 @@ const detachProblem = catchAsync(async (req: Request, res: Response) => {
 	const assessmentId = req.params.id as string;
 	const problemId = req.params.problemId as string;
 	const caller: ICallerInfo = {
+		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};
@@ -138,6 +145,7 @@ const detachProblem = catchAsync(async (req: Request, res: Response) => {
 const publishAssessment = catchAsync(async (req: Request, res: Response) => {
 	const id = req.params.id as string;
 	const caller: ICallerInfo = {
+		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};

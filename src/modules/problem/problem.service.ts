@@ -1,5 +1,6 @@
 import type { Prisma } from "../../../generated/prisma";
 import { prisma } from "../../lib/prisma";
+import { writeAuditLog } from "../../utils/auditLog";
 import { createError } from "../../utils/createError";
 import type {
 	ICallerInfo,
@@ -240,6 +241,14 @@ const deleteProblem = async (id: string, caller: ICallerInfo) => {
 		data: {
 			deletedAt: new Date(),
 		},
+	});
+
+	await writeAuditLog({
+		actorId: caller.userId,
+		actorRole: caller.role,
+		action: "PROBLEM_DELETED",
+		entityType: "Problem",
+		entityId: id,
 	});
 
 	return null;

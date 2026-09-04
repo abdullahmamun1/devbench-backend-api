@@ -29,6 +29,7 @@ export interface IAssessmentFilterQuery {
 }
 
 export interface ICallerInfo {
+	userId:string,
 	role: UserRole;
 	companyId?: string | null;
 }

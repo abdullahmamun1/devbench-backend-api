@@ -60,7 +60,6 @@ router.post(
 router.delete(
 	"/:id/problems/:problemId",
 	auth(UserRole.ADMIN, UserRole.ASSESSMENT_CREATOR, UserRole.COMPANY_OWNER),
-	validateRequest(assessmentValidation.createAssessmentValidationSchema),
 	assessmentController.detachProblem,
 );
 

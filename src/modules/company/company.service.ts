@@ -11,6 +11,7 @@ import type {
 	IInviteTeamMemberPayload,
 	IUpdateCompanyPayload,
 } from "./company.interface";
+import { writeAuditLog } from "../../utils/auditLog";
 
 const createCompany = async (
 	payload: ICreateCompanyPayload,
@@ -40,6 +41,17 @@ const createCompany = async (
 				role: "COMPANY_OWNER",
 			},
 		});
+
+		await writeAuditLog(
+			{
+				actorId: caller.userId,
+				actorRole: caller.role,
+				action: "COMPANY_CREATED",
+				entityType: "Company",
+				entityId: company.id,
+			},
+			tx,
+		);
 
 		return company;
 	});
@@ -258,6 +270,17 @@ const acceptTeamInvitation = async (
 			where: { id: invitation.id },
 			data: { status: "ACCEPTED" },
 		});
+
+		await writeAuditLog(
+			{
+				actorId: targetUserId,
+				actorRole: invitation.role,
+				action: "INVITATION_ACCEPTED",
+				entityType: "TeamInvitation",
+				entityId: invitation.id,
+			},
+			tx,
+		);
 
 		return tx.user.findUnique({ where: { id: targetUserId } });
 	});
