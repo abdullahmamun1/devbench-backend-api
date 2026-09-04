@@ -73,3 +73,47 @@ export const auth = (...requiredRoles: UserRole[]) => {
 		},
 	);
 };
+
+export const optionalAuth = () => {
+	return catchAsync(
+		async (req: Request, _res: Response, next: NextFunction) => {
+			const token = req.cookies.accessToken
+				? req.cookies.accessToken
+				: req.headers.authorization?.startsWith("Bearer ")
+					? req.headers.authorization?.split(" ")[1]
+					: req.headers.authorization;
+
+			// No token at all — proceed unauthenticated, req.user stays undefined
+			if (!token) {
+				return next();
+			}
+
+			const verifiedToken = jwtUtils.verifyToken(
+				token,
+				config.jwt_access_secret,
+			);
+
+			// Invalid/expired token — don't fail the request, just treat as unauthenticated
+			if (!verifiedToken.success) {
+				return next();
+			}
+
+			const { id } = verifiedToken.data as JwtPayload;
+			const user = await prisma.user.findUnique({ where: { id } });
+
+			if (!user || user.status === "SUSPENDED") {
+				return next();
+			}
+
+			req.user = {
+				userId: user.id,
+				name: user.name,
+				email: user.email,
+				role: user.role,
+				companyId: user.companyId,
+			};
+
+			next();
+		},
+	);
+};

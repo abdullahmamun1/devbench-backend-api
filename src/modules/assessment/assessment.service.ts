@@ -1,6 +1,7 @@
-import { Prisma, UserRole } from "../../../generated/prisma";
+import type { Prisma } from "../../../generated/prisma";
 import { prisma } from "../../lib/prisma";
 import { createError } from "../../utils/createError";
+import { resolveCompanyScope } from "../../utils/scoping";
 import type {
 	IAssessmentFilterQuery,
 	IAttachProblemPayload,
@@ -8,23 +9,6 @@ import type {
 	ICreateAssessmentPayload,
 	IUpdateAssessmentPayload,
 } from "./assessment.interface";
-
-// Assessment.companyId is required (non-nullable).
-// Non-admin callers must always have a companyId to touch this resource at all.
-const resolveScopeCompanyId = (caller: ICallerInfo): string | undefined => {
-	if (caller.role === "ADMIN") {
-		return undefined; // no scoping — admin can see/touch any company's assessments
-	}
-
-	if (!caller.companyId) {
-		throw createError(
-			400,
-			"You must belong to a company to access assessments",
-		);
-	}
-
-	return caller.companyId;
-};
 
 const createAssessment = async (
 	payload: ICreateAssessmentPayload,
@@ -60,7 +44,7 @@ const getAllAssessments = async (
 	const sortBy = query.sortBy || "createdAt";
 	const sortOrder = query.sortOrder || "desc";
 
-	const scopeCompanyId = resolveScopeCompanyId(caller);
+	const scopeCompanyId = resolveCompanyScope(caller);
 
 	const where: Prisma.AssessmentWhereInput = {
 		deletedAt: null,
@@ -102,7 +86,7 @@ const getAllAssessments = async (
 };
 
 const getAssessmentById = async (id: string, caller: ICallerInfo) => {
-	const scopeCompanyId = resolveScopeCompanyId(caller);
+	const scopeCompanyId = resolveCompanyScope(caller);
 
 	const assessment = await prisma.assessment.findFirst({
 		where: {
@@ -144,7 +128,7 @@ const updateAssessment = async (
 	payload: IUpdateAssessmentPayload,
 	caller: ICallerInfo,
 ) => {
-	const scopeCompanyId = resolveScopeCompanyId(caller);
+	const scopeCompanyId = resolveCompanyScope(caller);
 
 	const existing = await prisma.assessment.findFirst({
 		where: {
@@ -195,7 +179,7 @@ const updateAssessment = async (
 };
 
 const deleteAssessment = async (id: string, caller: ICallerInfo) => {
-	const scopeCompanyId = resolveScopeCompanyId(caller);
+	const scopeCompanyId = resolveCompanyScope(caller);
 
 	const existing = await prisma.assessment.findFirst({
 		where: {
@@ -224,7 +208,7 @@ const attachProblem = async (
 	payload: IAttachProblemPayload,
 	caller: ICallerInfo,
 ) => {
-	const scopeCompanyId = resolveScopeCompanyId(caller);
+	const scopeCompanyId = resolveCompanyScope(caller);
 
 	const assessment = await prisma.assessment.findFirst({
 		where: {
@@ -297,7 +281,7 @@ const detachProblem = async (
 	problemId: string,
 	caller: ICallerInfo,
 ) => {
-	const scopeCompanyId = resolveScopeCompanyId(caller);
+	const scopeCompanyId = resolveCompanyScope(caller);
 
 	const assessment = await prisma.assessment.findFirst({
 		where: {
@@ -335,7 +319,7 @@ const detachProblem = async (
 };
 
 const publishAssessment = async (id: string, caller: ICallerInfo) => {
-	const scopeCompanyId = resolveScopeCompanyId(caller);
+	const scopeCompanyId = resolveCompanyScope(caller);
 
 	return await prisma.$transaction(async (tx) => {
 		const assessment = await tx.assessment.findFirst({

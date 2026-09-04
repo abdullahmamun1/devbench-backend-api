@@ -4,6 +4,7 @@ import config from "../../config";
 import { transporter } from "../../lib/nodemailer";
 import { prisma } from "../../lib/prisma";
 import { createError } from "../../utils/createError";
+import { requireCompanyId } from "../../utils/scoping";
 import type {
 	ICallerInfo,
 	ICreateCompanyPayload,
@@ -45,12 +46,10 @@ const createCompany = async (
 };
 
 const getMyCompany = async (caller: ICallerInfo) => {
-	if (!caller.companyId) {
-		throw createError(400, "You do not belong to a company");
-	}
+	const companyId = requireCompanyId(caller);
 
 	const company = await prisma.company.findFirst({
-		where: { id: caller.companyId, deletedAt: null },
+		where: { id: companyId, deletedAt: null },
 		select: {
 			id: true,
 			companyName: true,
@@ -79,12 +78,10 @@ const updateCompany = async (
 	payload: IUpdateCompanyPayload,
 	caller: ICallerInfo,
 ) => {
-	if (!caller.companyId) {
-		throw createError(400, "You do not belong to a company");
-	}
+	const companyId = requireCompanyId(caller);
 
 	const company = await prisma.company.findFirst({
-		where: { id: caller.companyId, deletedAt: null },
+		where: { id: companyId, deletedAt: null },
 	});
 
 	if (!company) {
@@ -92,7 +89,7 @@ const updateCompany = async (
 	}
 
 	const updated = await prisma.company.update({
-		where: { id: caller.companyId },
+		where: { id: companyId },
 		data: {
 			...(payload.companyName && { companyName: payload.companyName }),
 		},
@@ -102,12 +99,10 @@ const updateCompany = async (
 };
 
 const getCredits = async (caller: ICallerInfo) => {
-	if (!caller.companyId) {
-		throw createError(400, "You do not belong to a company");
-	}
+	const companyId = requireCompanyId(caller);
 
 	const company = await prisma.company.findFirst({
-		where: { id: caller.companyId, deletedAt: null },
+		where: { id: companyId, deletedAt: null },
 		select: {
 			id: true,
 			creditBalance: true,
@@ -119,7 +114,7 @@ const getCredits = async (caller: ICallerInfo) => {
 	}
 
 	const transactions = await prisma.creditTransaction.findMany({
-		where: { companyId: caller.companyId },
+		where: { companyId },
 		orderBy: { createdAt: "desc" },
 		take: 20,
 	});
@@ -134,9 +129,7 @@ const inviteTeamMember = async (
 	payload: IInviteTeamMemberPayload,
 	caller: ICallerInfo,
 ) => {
-	if (!caller.companyId) {
-		throw createError(400, "You do not belong to a company");
-	}
+	const companyId = requireCompanyId(caller);
 
 	const existingUser = await prisma.user.findUnique({
 		where: { email: payload.email },
@@ -148,7 +141,7 @@ const inviteTeamMember = async (
 
 	const pendingInvite = await prisma.teamInvitation.findFirst({
 		where: {
-			companyId: caller.companyId,
+			companyId,
 			email: payload.email,
 			status: "PENDING",
 		},
@@ -160,11 +153,13 @@ const inviteTeamMember = async (
 
 	const token = crypto.randomBytes(32).toString("hex");
 	const expiresAt = new Date();
-	expiresAt.setDate(expiresAt.getDate() + config.invitation_expires_in_days);
+	expiresAt.setDate(
+		expiresAt.getDate() + config.team_invitation_expires_in_days,
+	);
 
 	const invitation = await prisma.teamInvitation.create({
 		data: {
-			companyId: caller.companyId,
+			companyId,
 			email: payload.email,
 			role: payload.role,
 			token,
@@ -178,7 +173,7 @@ const inviteTeamMember = async (
 		from: config.mail_from,
 		to: payload.email,
 		subject: "You've been invited to join a team on DevBench",
-		html: `<p>You've been invited as a <b>${payload.role}</b>. Click <a href="${inviteLink}">here</a> to accept. This link expires in ${config.invitation_expires_in_days} days.</p>`,
+		html: `<p>You've been invited as a <b>${payload.role}</b>. Click <a href="${inviteLink}">here</a> to accept. This link expires in ${config.team_invitation_expires_in_days} days.</p>`,
 	});
 
 	return invitation;

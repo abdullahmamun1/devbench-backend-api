@@ -1,5 +1,5 @@
+import path from "node:path";
 import dotenv from "dotenv";
-import path from "path";
 
 dotenv.config({ path: path.join(process.cwd(), ".env") });
 
@@ -29,8 +29,10 @@ export default {
 	cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
 	cloudinary_api_key: process.env.CLOUDINARY_API_KEY!,
 	cloudinary_api_secret: process.env.CLOUDINARY_API_SECRET!,
-	invitation_expires_in_days:
-		Number(process.env.INVITATION_EXPIRES_IN_DAYS) || 7,
+	team_invitation_expires_in_days:
+		Number(process.env.TEAM_INVITATION_EXPIRES_IN_DAYS) || 7,
+	candidate_invitation_expires_in_days:
+		Number(process.env.CANDIDATE_INVITATION_EXPIRES_IN_DAYS) || 7,
 	// Seed credentials
 	admin_email: process.env.ADMIN_EMAIL,
 	admin_password: process.env.ADMIN_PASSWORD,

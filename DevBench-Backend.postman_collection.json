@@ -35,7 +35,11 @@
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
-						"url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "register"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"name\": \"Test Candidate\",\n  \"email\": \"test.candidate@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"CANDIDATE\"\n}"
@@ -47,7 +51,11 @@
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
-						"url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "register"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"name\": \"Test Owner\",\n  \"email\": \"test.owner@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"COMPANY_OWNER\",\n  \"companyName\": \"Test Company\"\n}"
@@ -73,7 +81,11 @@
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
-						"url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
@@ -99,7 +111,11 @@
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
-						"url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"email\": \"{{companyOwnerEmail}}\",\n  \"password\": \"{{companyOwnerPassword}}\"\n}"
@@ -125,7 +141,11 @@
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
-						"url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"email\": \"{{assessmentCreatorEmail}}\",\n  \"password\": \"{{assessmentCreatorPassword}}\"\n}"
@@ -151,7 +171,11 @@
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
-						"url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"email\": \"{{evaluatorEmail}}\",\n  \"password\": \"{{evaluatorPassword}}\"\n}"
@@ -180,7 +204,11 @@
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
-						"url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"email\": \"{{candidateEmail}}\",\n  \"password\": \"{{candidatePassword}}\"\n}"
@@ -205,7 +233,11 @@
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
-						"url": { "raw": "{{baseUrl}}/auth/refresh-token", "host": ["{{baseUrl}}"], "path": ["auth", "refresh-token"] },
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh-token",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "refresh-token"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"refreshToken\": \"{{candidateRefreshToken}}\"\n}"
@@ -217,7 +249,11 @@
 					"name": "Logout",
 					"request": {
 						"method": "POST",
-						"url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] }
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout"]
+						}
 					}
 				}
 			]
@@ -229,8 +265,17 @@
 					"name": "Get My Profile",
 					"request": {
 						"method": "GET",
-						"header": [{ "key": "Authorization", "value": "Bearer {{candidateAccessToken}}" }],
-						"url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] }
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "me"]
+						}
 					}
 				},
 				{
@@ -238,10 +283,17 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{ "key": "Authorization", "value": "Bearer {{candidateAccessToken}}" },
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							},
 							{ "key": "Content-Type", "value": "application/json" }
 						],
-						"url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] },
+						"url": {
+							"raw": "{{baseUrl}}/users/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "me"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"headline\": \"Full Stack Developer\",\n  \"skills\": [\"TypeScript\", \"React\", \"Node.js\"]\n}"
@@ -271,10 +323,17 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" },
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
 							{ "key": "Content-Type", "value": "application/json" }
 						],
-						"url": { "raw": "{{baseUrl}}/problems", "host": ["{{baseUrl}}"], "path": ["problems"] },
+						"url": {
+							"raw": "{{baseUrl}}/problems",
+							"host": ["{{baseUrl}}"],
+							"path": ["problems"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"title\": \"Two Sum\",\n  \"description\": \"Given an array of integers, return indices of the two numbers that add up to a target.\",\n  \"type\": \"CODING\",\n  \"points\": 10,\n  \"testCases\": [\n    { \"input\": \"[2,7,11,15], 9\", \"expectedOutput\": \"[0,1]\", \"isHidden\": false, \"weight\": 1 },\n    { \"input\": \"[3,2,4], 6\", \"expectedOutput\": \"[1,2]\", \"isHidden\": true, \"weight\": 1 }\n  ]\n}"
@@ -286,10 +345,17 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{ "key": "Authorization", "value": "Bearer {{companyOwnerAccessToken}}" },
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyOwnerAccessToken}}"
+							},
 							{ "key": "Content-Type", "value": "application/json" }
 						],
-						"url": { "raw": "{{baseUrl}}/problems", "host": ["{{baseUrl}}"], "path": ["problems"] },
+						"url": {
+							"raw": "{{baseUrl}}/problems",
+							"host": ["{{baseUrl}}"],
+							"path": ["problems"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"title\": \"What is a closure?\",\n  \"description\": \"Pick the best definition of a closure in JavaScript.\",\n  \"type\": \"MCQ\",\n  \"points\": 5,\n  \"mcqOptions\": [\n    { \"text\": \"A function bundled with its lexical scope\", \"isCorrect\": true, \"order\": 1 },\n    { \"text\": \"A loop that never ends\", \"isCorrect\": false, \"order\": 2 },\n    { \"text\": \"A type of async callback\", \"isCorrect\": false, \"order\": 3 }\n  ]\n}"
@@ -301,7 +367,12 @@
 					"name": "Get All Problems - Assessment Creator",
 					"request": {
 						"method": "GET",
-						"header": [{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" }],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/problems?page=1&limit=10",
 							"host": ["{{baseUrl}}"],
@@ -317,8 +388,17 @@
 					"name": "Get Problem By Id - Assessment Creator",
 					"request": {
 						"method": "GET",
-						"header": [{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" }],
-						"url": { "raw": "{{baseUrl}}/problems/{{problemId}}", "host": ["{{baseUrl}}"], "path": ["problems", "{{problemId}}"] }
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/problems/{{problemId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["problems", "{{problemId}}"]
+						}
 					}
 				},
 				{
@@ -326,10 +406,17 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" },
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
 							{ "key": "Content-Type", "value": "application/json" }
 						],
-						"url": { "raw": "{{baseUrl}}/problems/{{problemId}}", "host": ["{{baseUrl}}"], "path": ["problems", "{{problemId}}"] },
+						"url": {
+							"raw": "{{baseUrl}}/problems/{{problemId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["problems", "{{problemId}}"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"points\": 15\n}"
@@ -340,24 +427,51 @@
 					"name": "Delete Problem - Assessment Creator",
 					"request": {
 						"method": "DELETE",
-						"header": [{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" }],
-						"url": { "raw": "{{baseUrl}}/problems/{{problemId}}", "host": ["{{baseUrl}}"], "path": ["problems", "{{problemId}}"] }
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/problems/{{problemId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["problems", "{{problemId}}"]
+						}
 					}
 				},
 				{
 					"name": "[Negative] Candidate GET /problems -> expect 403",
 					"request": {
 						"method": "GET",
-						"header": [{ "key": "Authorization", "value": "Bearer {{candidateAccessToken}}" }],
-						"url": { "raw": "{{baseUrl}}/problems", "host": ["{{baseUrl}}"], "path": ["problems"] }
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/problems",
+							"host": ["{{baseUrl}}"],
+							"path": ["problems"]
+						}
 					}
 				},
 				{
 					"name": "[Negative] Candidate GET /problems/:id -> expect 403",
 					"request": {
 						"method": "GET",
-						"header": [{ "key": "Authorization", "value": "Bearer {{candidateAccessToken}}" }],
-						"url": { "raw": "{{baseUrl}}/problems/{{problemId}}", "host": ["{{baseUrl}}"], "path": ["problems", "{{problemId}}"] }
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/problems/{{problemId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["problems", "{{problemId}}"]
+						}
 					}
 				},
 				{
@@ -365,7 +479,10 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" },
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
 							{ "key": "Content-Type", "value": "application/json" }
 						],
 						"url": {
@@ -381,7 +498,12 @@
 					"name": "[Negative] Cross-company DELETE -> expect 404",
 					"request": {
 						"method": "DELETE",
-						"header": [{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" }],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/problems/{{otherCompanyProblemId}}",
 							"host": ["{{baseUrl}}"],
@@ -399,10 +521,17 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{ "key": "Authorization", "value": "Bearer {{candidateAccessToken}}" },
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							},
 							{ "key": "Content-Type", "value": "application/json" }
 						],
-						"url": { "raw": "{{baseUrl}}/companies", "host": ["{{baseUrl}}"], "path": ["companies"] },
+						"url": {
+							"raw": "{{baseUrl}}/companies",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"companyName\": \"Newly Registered Co\"\n}"
@@ -414,16 +543,34 @@
 					"name": "Get My Company - Company Owner",
 					"request": {
 						"method": "GET",
-						"header": [{ "key": "Authorization", "value": "Bearer {{companyOwnerAccessToken}}" }],
-						"url": { "raw": "{{baseUrl}}/companies/me", "host": ["{{baseUrl}}"], "path": ["companies", "me"] }
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyOwnerAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/companies/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "me"]
+						}
 					}
 				},
 				{
 					"name": "Get My Company - Assessment Creator",
 					"request": {
 						"method": "GET",
-						"header": [{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" }],
-						"url": { "raw": "{{baseUrl}}/companies/me", "host": ["{{baseUrl}}"], "path": ["companies", "me"] }
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/companies/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "me"]
+						}
 					}
 				},
 				{
@@ -431,10 +578,17 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{ "key": "Authorization", "value": "Bearer {{companyOwnerAccessToken}}" },
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyOwnerAccessToken}}"
+							},
 							{ "key": "Content-Type", "value": "application/json" }
 						],
-						"url": { "raw": "{{baseUrl}}/companies/me", "host": ["{{baseUrl}}"], "path": ["companies", "me"] },
+						"url": {
+							"raw": "{{baseUrl}}/companies/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "me"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"companyName\": \"Renamed Company Inc.\"\n}"
@@ -446,35 +600,72 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" },
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
 							{ "key": "Content-Type", "value": "application/json" }
 						],
-						"url": { "raw": "{{baseUrl}}/companies/me", "host": ["{{baseUrl}}"], "path": ["companies", "me"] },
-						"body": { "mode": "raw", "raw": "{\n  \"companyName\": \"Should Fail\"\n}" }
+						"url": {
+							"raw": "{{baseUrl}}/companies/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "me"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyName\": \"Should Fail\"\n}"
+						}
 					}
 				},
 				{
 					"name": "Get Credits - Company Owner",
 					"request": {
 						"method": "GET",
-						"header": [{ "key": "Authorization", "value": "Bearer {{companyOwnerAccessToken}}" }],
-						"url": { "raw": "{{baseUrl}}/companies/credits", "host": ["{{baseUrl}}"], "path": ["companies", "credits"] }
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyOwnerAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/companies/credits",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "credits"]
+						}
 					}
 				},
 				{
 					"name": "[Negative] Get Credits - Assessment Creator -> expect 403",
 					"request": {
 						"method": "GET",
-						"header": [{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" }],
-						"url": { "raw": "{{baseUrl}}/companies/credits", "host": ["{{baseUrl}}"], "path": ["companies", "credits"] }
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/companies/credits",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "credits"]
+						}
 					}
 				},
 				{
 					"name": "[Negative] Get Credits - Evaluator -> expect 403",
 					"request": {
 						"method": "GET",
-						"header": [{ "key": "Authorization", "value": "Bearer {{evaluatorAccessToken}}" }],
-						"url": { "raw": "{{baseUrl}}/companies/credits", "host": ["{{baseUrl}}"], "path": ["companies", "credits"] }
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/companies/credits",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "credits"]
+						}
 					}
 				},
 				{
@@ -482,10 +673,17 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{ "key": "Authorization", "value": "Bearer {{companyOwnerAccessToken}}" },
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyOwnerAccessToken}}"
+							},
 							{ "key": "Content-Type", "value": "application/json" }
 						],
-						"url": { "raw": "{{baseUrl}}/companies/team/invite", "host": ["{{baseUrl}}"], "path": ["companies", "team", "invite"] },
+						"url": {
+							"raw": "{{baseUrl}}/companies/team/invite",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "team", "invite"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"email\": \"new.teammate@example.com\",\n  \"role\": \"ASSESSMENT_CREATOR\"\n}"
@@ -498,10 +696,17 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{ "key": "Authorization", "value": "Bearer {{assessmentCreatorAccessToken}}" },
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
 							{ "key": "Content-Type", "value": "application/json" }
 						],
-						"url": { "raw": "{{baseUrl}}/companies/team/invite", "host": ["{{baseUrl}}"], "path": ["companies", "team", "invite"] },
+						"url": {
+							"raw": "{{baseUrl}}/companies/team/invite",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "team", "invite"]
+						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"email\": \"nope@example.com\",\n  \"role\": \"EVALUATOR\"\n}"
