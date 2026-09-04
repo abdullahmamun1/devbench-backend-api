@@ -223,15 +223,158 @@ const attachProblem = async (
 	assessmentId: string,
 	payload: IAttachProblemPayload,
 	caller: ICallerInfo,
-) => {};
+) => {
+	const scopeCompanyId = resolveScopeCompanyId(caller);
+
+	const assessment = await prisma.assessment.findFirst({
+		where: {
+			id: assessmentId,
+			deletedAt: null,
+			...(scopeCompanyId && { companyId: scopeCompanyId }),
+		},
+		include: {
+			_count: { select: { invitations: true } },
+		},
+	});
+
+	if (!assessment) {
+		throw createError(404, "Assessment not found");
+	}
+
+	if (assessment._count.invitations > 0) {
+		throw createError(
+			400,
+			"Cannot modify problems after invitations have been sent",
+		);
+	}
+
+	// Problem must belong to the same company so a company can't attach
+	// another company's private problem to their assessment.
+	const problem = await prisma.problem.findFirst({
+		where: {
+			id: payload.problemId,
+			deletedAt: null,
+			...(caller.role !== "ADMIN" && {
+				companyId: assessment.companyId,
+			}),
+		},
+	});
+
+	if (!problem) {
+		throw createError(404, "Problem not found");
+	}
+
+	const existingLink = await prisma.assessmentProblem.findFirst({
+		where: { assessmentId, problemId: payload.problemId },
+	});
+
+	if (existingLink) {
+		throw createError(
+			400,
+			"This problem is already attached to the assessment",
+		);
+	}
+
+	const link = await prisma.assessmentProblem.create({
+		data: {
+			assessmentId,
+			problemId: payload.problemId,
+			order: payload.order,
+			points: payload.points,
+		},
+		include: {
+			problem: {
+				select: { id: true, title: true, type: true },
+			},
+		},
+	});
+
+	return link;
+};
 
 const detachProblem = async (
 	assessmentId: string,
-	payload: IAttachProblemPayload,
+	problemId: string,
 	caller: ICallerInfo,
-) => {};
+) => {
+	const scopeCompanyId = resolveScopeCompanyId(caller);
 
-const publishAssessment = async (id: string, caller: ICallerInfo) => {};
+	const assessment = await prisma.assessment.findFirst({
+		where: {
+			id: assessmentId,
+			deletedAt: null,
+			...(scopeCompanyId && { companyId: scopeCompanyId }),
+		},
+		include: {
+			_count: { select: { invitations: true } },
+		},
+	});
+
+	if (!assessment) {
+		throw createError(404, "Assessment not found");
+	}
+
+	if (assessment._count.invitations > 0) {
+		throw createError(
+			400,
+			"Cannot modify problems after invitations have been sent",
+		);
+	}
+
+	const link = await prisma.assessmentProblem.findFirst({
+		where: { assessmentId, problemId },
+	});
+
+	if (!link) {
+		throw createError(404, "This problem is not attached to the assessment");
+	}
+
+	await prisma.assessmentProblem.delete({ where: { id: link.id } });
+
+	return null;
+};
+
+const publishAssessment = async (id: string, caller: ICallerInfo) => {
+	const scopeCompanyId = resolveScopeCompanyId(caller);
+
+	return await prisma.$transaction(async (tx) => {
+		const assessment = await tx.assessment.findFirst({
+			where: {
+				id,
+				deletedAt: null,
+				...(scopeCompanyId && { companyId: scopeCompanyId }),
+			},
+			include: {
+				_count: { select: { assessmentProblems: true } },
+			},
+		});
+
+		if (!assessment) {
+			throw createError(404, "Assessment not found");
+		}
+
+		if (assessment.status !== "DRAFT") {
+			throw createError(
+				400,
+				`Assessment is already ${assessment.status.toLowerCase()}`,
+			);
+		}
+
+		if (assessment._count.assessmentProblems === 0) {
+			throw createError(
+				400,
+				"Cannot publish an assessment with no attached problems",
+			);
+		}
+
+		const published = await tx.assessment.update({
+			where: { id },
+			data: { status: "PUBLISHED" },
+		});
+
+		return published;
+	});
+};
 
 export const assessmentService = {
 	createAssessment,
