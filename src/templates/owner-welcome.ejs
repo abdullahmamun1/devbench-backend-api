@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to DevBench Workspace</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; color: #f8fafc;">
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="100%" style="max-width: 600px; margin: 40px auto; background-color: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #334155; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);">
+        
+        <tr>
+            <td height="4" style="background: linear-gradient(90deg, #10b981, #059669);"></td>
+        </tr>
+
+        <!-- Header -->
+        <tr>
+            <td style="padding: 32px 40px 20px 40px;">
+                <span style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #10b981;">DevBench Administration Portal</span>
+                <h1 style="margin: 8px 0 0 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Workspace Ready, <%= name %>!</h1>
+            </td>
+        </tr>
+
+        <!-- Body Content -->
+        <tr>
+            <td style="padding: 0 40px 32px 40px;">
+                <p style="font-size: 16px; line-height: 1.6; color: #cbd5e1; margin-top: 0; margin-bottom: 20px;">
+                    Thank you for establishing your hiring environment. Your organization space <strong><%= companyName %></strong> has been registered successfully onto DevBench under the Owner role.
+                </p>
+
+                <p style="font-size: 16px; line-height: 1.6; color: #cbd5e1; margin-bottom: 24px;">
+                    From your workspace management core, you now have access controls to:
+                </p>
+                <ul style="font-size: 15px; color: #cbd5e1; line-height: 1.8; margin-bottom: 24px; padding-left: 20px;">
+                    <li>Generate complex problem banks consisting of MCQ or Coding types.</li>
+                    <li>Delegate work parameters by sending invites to <strong>Assessment Creators</strong> and <strong>Evaluators</strong>.</li>
+                    <li>Audit active company credit spending tracks.</li>
+                </ul>
+
+                <p style="font-size: 14px; line-height: 1.5; color: #64748b; margin-bottom: 0;">
+                    To securely manage operational parameters, ensure permissions and environment variables are properly mounted into your collection variables.
+                </p>
+            </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+            <td style="background-color: #0f172a; padding: 24px 40px; text-align: left; font-size: 12px; color: #64748b; border-top: 1px solid #334155;">
+                <p style="margin: 0 0 6px 0;">&copy; <%= new Date().getFullYear() %> DevBench Platform. All rights reserved.</p>
+                <p style="margin: 0; line-height: 1.4;">Automated management transmission pipeline.</p>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

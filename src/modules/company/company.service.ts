@@ -226,6 +226,7 @@ const acceptTeamInvitation = async (
 					email: invitation.email,
 					passwordHash,
 					role: invitation.role,
+					emailVerified: true,
 					companyId: invitation.companyId,
 				},
 			});

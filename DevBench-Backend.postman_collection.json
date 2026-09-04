@@ -5,26 +5,118 @@
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
-		{ "key": "baseUrl", "value": "http://localhost:5000/api/v1" },
-		{ "key": "adminAccessToken", "value": "" },
-		{ "key": "companyOwnerAccessToken", "value": "" },
-		{ "key": "assessmentCreatorAccessToken", "value": "" },
-		{ "key": "evaluatorAccessToken", "value": "" },
-		{ "key": "candidateAccessToken", "value": "" },
-		{ "key": "candidateRefreshToken", "value": "" },
-		{ "key": "adminEmail", "value": "" },
-		{ "key": "adminPassword", "value": "" },
-		{ "key": "companyOwnerEmail", "value": "" },
-		{ "key": "companyOwnerPassword", "value": "" },
-		{ "key": "assessmentCreatorEmail", "value": "" },
-		{ "key": "assessmentCreatorPassword", "value": "" },
-		{ "key": "evaluatorEmail", "value": "" },
-		{ "key": "evaluatorPassword", "value": "" },
-		{ "key": "candidateEmail", "value": "" },
-		{ "key": "candidatePassword", "value": "" },
-		{ "key": "problemId", "value": "" },
-		{ "key": "otherCompanyProblemId", "value": "" },
-		{ "key": "teamInviteToken", "value": "" }
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000/api/v1"
+		},
+		{
+			"key": "adminAccessToken",
+			"value": ""
+		},
+		{
+			"key": "companyOwnerAccessToken",
+			"value": ""
+		},
+		{
+			"key": "assessmentCreatorAccessToken",
+			"value": ""
+		},
+		{
+			"key": "evaluatorAccessToken",
+			"value": ""
+		},
+		{
+			"key": "candidateAccessToken",
+			"value": ""
+		},
+		{
+			"key": "candidateRefreshToken",
+			"value": ""
+		},
+		{
+			"key": "adminEmail",
+			"value": ""
+		},
+		{
+			"key": "adminPassword",
+			"value": ""
+		},
+		{
+			"key": "companyOwnerEmail",
+			"value": ""
+		},
+		{
+			"key": "companyOwnerPassword",
+			"value": ""
+		},
+		{
+			"key": "assessmentCreatorEmail",
+			"value": ""
+		},
+		{
+			"key": "assessmentCreatorPassword",
+			"value": ""
+		},
+		{
+			"key": "evaluatorEmail",
+			"value": ""
+		},
+		{
+			"key": "evaluatorPassword",
+			"value": ""
+		},
+		{
+			"key": "candidateEmail",
+			"value": ""
+		},
+		{
+			"key": "candidatePassword",
+			"value": ""
+		},
+		{
+			"key": "problemId",
+			"value": ""
+		},
+		{
+			"key": "otherCompanyProblemId",
+			"value": ""
+		},
+		{
+			"key": "teamInviteToken",
+			"value": ""
+		},
+		{
+			"key": "assessmentId",
+			"value": ""
+		},
+		{
+			"key": "otherCompanyAssessmentId",
+			"value": ""
+		},
+		{
+			"key": "invitationToken",
+			"value": ""
+		},
+		{
+			"key": "emptyAssessmentId",
+			"value": ""
+		},
+		{
+			"key": "registeredEmail",
+			"value": "test.candidate@example.com"
+		},
+		{
+			"key": "registrationOtp",
+			"value": ""
+		},
+		{
+			"key": "googleIdToken",
+			"value": ""
+		},
+		{
+			"key": "resetPasswordOtp",
+			"value": ""
+		}
 	],
 	"item": [
 		{
@@ -34,32 +126,192 @@
 					"name": "Register - Candidate",
 					"request": {
 						"method": "POST",
-						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/register",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "register"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
 						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"name\": \"Test Candidate\",\n  \"email\": \"test.candidate@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"CANDIDATE\"\n}"
-						}
+						},
+						"description": "Creates the user immediately with emailVerified: false and emails a 6-digit OTP. Returns { email, otpExpiresInSeconds } \u2014 NOT tokens. Copy the OTP from your mail catcher/logs into registrationOtp, then run 'Verify Email' below before logging in."
 					}
 				},
 				{
 					"name": "Register - Company Owner",
 					"request": {
 						"method": "POST",
-						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/register",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "register"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
 						},
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"name\": \"Test Owner\",\n  \"email\": \"test.owner@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"COMPANY_OWNER\",\n  \"companyName\": \"Test Company\"\n}"
+						},
+						"description": "Creates the user immediately with emailVerified: false and emails a 6-digit OTP. Returns { email, otpExpiresInSeconds } \u2014 NOT tokens. Copy the OTP from your mail catcher/logs into registrationOtp, then run 'Verify Email' below before logging in."
+					}
+				},
+				{
+					"name": "Verify Email (OTP)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const res = pm.response.json();",
+									"    if (res?.data?.accessToken) {",
+									"        pm.collectionVariables.set('candidateAccessToken', res.data.accessToken);",
+									"    }",
+									"}"
+								]
+							}
 						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/verify-email",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"verify-email"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{registeredEmail}}\",\n  \"otp\": \"{{registrationOtp}}\"\n}"
+						},
+						"description": "Sets emailVerified: true, sends the welcome email, and returns tokens \u2014 login will 403 with 'please verify your email' until this succeeds."
+					}
+				},
+				{
+					"name": "Google Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const res = pm.response.json();",
+									"    if (res?.data?.accessToken) {",
+									"        pm.collectionVariables.set('candidateAccessToken', res.data.accessToken);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/google",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"google"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idToken\": \"{{googleIdToken}}\",\n  \"role\": \"CANDIDATE\"\n}"
+						},
+						"description": "Postman can't run the Google consent flow itself \u2014 obtain a real Google ID token from a frontend/OAuth playground first and paste it into googleIdToken. role/companyName are only used the first time a given Google account signs in; ignored on subsequent logins."
+					}
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/forgot-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"forgot-password"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{registeredEmail}}\"\n}"
+						},
+						"description": "Only works for a verified, non-Google account (404/403 otherwise). Copy the OTP from your mail catcher/logs into resetPasswordOtp before running 'Reset Password' below."
+					}
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/reset-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"reset-password"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{registeredEmail}}\",\n  \"otp\": \"{{resetPasswordOtp}}\",\n  \"newPassword\": \"newPassword123\"\n}"
+						},
+						"description": "On success, log in again with the new password to get a fresh accessToken \u2014 this endpoint doesn't return tokens itself."
 					}
 				},
 				{
@@ -80,11 +332,21 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "login"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -110,11 +372,21 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "login"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -140,11 +412,21 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "login"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -170,11 +452,21 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "login"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -203,11 +495,21 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "login"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -232,11 +534,21 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/refresh-token",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "refresh-token"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"refresh-token"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -251,8 +563,13 @@
 						"method": "POST",
 						"url": {
 							"raw": "{{baseUrl}}/auth/logout",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "logout"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
 						}
 					}
 				}
@@ -273,8 +590,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/users/me",
-							"host": ["{{baseUrl}}"],
-							"path": ["users", "me"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
 						}
 					}
 				},
@@ -287,12 +609,20 @@
 								"key": "Authorization",
 								"value": "Bearer {{candidateAccessToken}}"
 							},
-							{ "key": "Content-Type", "value": "application/json" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/users/me",
-							"host": ["{{baseUrl}}"],
-							"path": ["users", "me"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -327,12 +657,19 @@
 								"key": "Authorization",
 								"value": "Bearer {{assessmentCreatorAccessToken}}"
 							},
-							{ "key": "Content-Type", "value": "application/json" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems",
-							"host": ["{{baseUrl}}"],
-							"path": ["problems"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"problems"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -349,12 +686,19 @@
 								"key": "Authorization",
 								"value": "Bearer {{companyOwnerAccessToken}}"
 							},
-							{ "key": "Content-Type", "value": "application/json" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems",
-							"host": ["{{baseUrl}}"],
-							"path": ["problems"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"problems"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -375,11 +719,21 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems?page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["problems"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"problems"
+							],
 							"query": [
-								{ "key": "page", "value": "1" },
-								{ "key": "limit", "value": "10" }
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
 							]
 						}
 					}
@@ -396,8 +750,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems/{{problemId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["problems", "{{problemId}}"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"problems",
+								"{{problemId}}"
+							]
 						}
 					}
 				},
@@ -410,12 +769,20 @@
 								"key": "Authorization",
 								"value": "Bearer {{assessmentCreatorAccessToken}}"
 							},
-							{ "key": "Content-Type", "value": "application/json" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems/{{problemId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["problems", "{{problemId}}"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"problems",
+								"{{problemId}}"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -435,8 +802,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems/{{problemId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["problems", "{{problemId}}"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"problems",
+								"{{problemId}}"
+							]
 						}
 					}
 				},
@@ -452,8 +824,12 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems",
-							"host": ["{{baseUrl}}"],
-							"path": ["problems"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"problems"
+							]
 						}
 					}
 				},
@@ -469,8 +845,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems/{{problemId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["problems", "{{problemId}}"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"problems",
+								"{{problemId}}"
+							]
 						}
 					}
 				},
@@ -483,14 +864,25 @@
 								"key": "Authorization",
 								"value": "Bearer {{assessmentCreatorAccessToken}}"
 							},
-							{ "key": "Content-Type", "value": "application/json" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems/{{otherCompanyProblemId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["problems", "{{otherCompanyProblemId}}"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"problems",
+								"{{otherCompanyProblemId}}"
+							]
 						},
-						"body": { "mode": "raw", "raw": "{\n  \"points\": 99\n}" },
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"points\": 99\n}"
+						},
 						"description": "Set otherCompanyProblemId to a problem id owned by a different company (e.g. create one while logged in as a second COMPANY_OWNER). Confirms the IDOR fix."
 					}
 				},
@@ -506,9 +898,702 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems/{{otherCompanyProblemId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["problems", "{{otherCompanyProblemId}}"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"problems",
+								"{{otherCompanyProblemId}}"
+							]
 						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Assessment",
+			"item": [
+				{
+					"name": "Create Assessment - Assessment Creator",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const res = pm.response.json();",
+									"    pm.collectionVariables.set('assessmentId', res.data.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Backend Engineer Screening\",\n  \"description\": \"A short screening assessment covering DSA and JS fundamentals.\",\n  \"durationMinutes\": 60,\n  \"passingScore\": 70\n}"
+						}
+					}
+				},
+				{
+					"name": "Get All Assessments - Company Owner",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyOwnerAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Assessment By Id - Assessment Creator",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{assessmentId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Assessment (title) - Assessment Creator",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{assessmentId}}"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Backend Engineer Screening (v2)\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Attach Problem to Assessment - Assessment Creator",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/problems",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{assessmentId}}",
+								"problems"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"problemId\": \"{{problemId}}\",\n  \"order\": 1,\n  \"points\": 10\n}"
+						},
+						"description": "Requires a valid problemId collection variable \u2014 run 'Create Problem' in the Problem Bank folder first."
+					}
+				},
+				{
+					"name": "Publish Assessment - Assessment Creator",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/publish",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{assessmentId}}",
+								"publish"
+							]
+						}
+					}
+				},
+				{
+					"name": "[Negative] Publish with zero problems -> expect 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const res = pm.response.json();",
+									"    pm.collectionVariables.set('emptyAssessmentId', res.data.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Empty Assessment - No Problems Attached\",\n  \"durationMinutes\": 30,\n  \"passingScore\": 50\n}"
+						},
+						"description": "Step 1 of 2: creates an assessment with no problems attached, capturing its id into emptyAssessmentId."
+					}
+				},
+				{
+					"name": "[Negative] Publish emptyAssessmentId -> expect 400",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{emptyAssessmentId}}/publish",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{emptyAssessmentId}}",
+								"publish"
+							]
+						},
+						"description": "Step 2 of 2: run the 'zero problems' create request above first, then run this."
+					}
+				},
+				{
+					"name": "[Negative] Attach after invitations exist -> expect 400",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/problems",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{assessmentId}}",
+								"problems"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"problemId\": \"{{problemId}}\",\n  \"order\": 2,\n  \"points\": 5\n}"
+						},
+						"description": "Run this AFTER sending at least one invitation for this assessment (see Invitation folder) to confirm the edit-lock."
+					}
+				},
+				{
+					"name": "[Negative] Evaluator create assessment -> expect 403",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Should Fail\",\n  \"durationMinutes\": 30,\n  \"passingScore\": 50\n}"
+						}
+					}
+				},
+				{
+					"name": "[Negative] Cross-company GET assessment -> expect 404",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{otherCompanyAssessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{otherCompanyAssessmentId}}"
+							]
+						},
+						"description": "Set otherCompanyAssessmentId to an assessment id owned by a different company to confirm companyId scoping."
+					}
+				},
+				{
+					"name": "Delete Assessment - Assessment Creator",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{assessmentId}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Invitation",
+			"item": [
+				{
+					"name": "Send Invitation - Assessment Creator",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Copy the token from the invite email/logs into invitationToken to test accept flow"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/invitations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{assessmentId}}",
+								"invitations"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"candidateEmail\": \"new.candidate@example.com\"\n}"
+						},
+						"description": "Assessment must be PUBLISHED first. Debits 1 credit from the company's balance."
+					}
+				},
+				{
+					"name": "Get All Invitations for Assessment - Company Owner",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyOwnerAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/invitations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{assessmentId}}",
+								"invitations"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Invitation Preview (public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/invitations/accept/{{invitationToken}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"invitations",
+								"accept",
+								"{{invitationToken}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Accept Invitation - Register new candidate",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/invitations/accept/{{invitationToken}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"invitations",
+								"accept",
+								"{{invitationToken}}"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"New Candidate\",\n  \"password\": \"password123\"\n}"
+						},
+						"description": "No Authorization header \u2014 creates a new CANDIDATE account from the invited email."
+					}
+				},
+				{
+					"name": "Accept Invitation - Existing logged-in candidate",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/invitations/accept/{{invitationToken}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"invitations",
+								"accept",
+								"{{invitationToken}}"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"description": "Requires the logged-in candidate's email to exactly match the invitation's candidateEmail."
+					}
+				},
+				{
+					"name": "[Negative] Invite to a DRAFT assessment -> expect 400",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{emptyAssessmentId}}/invitations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{emptyAssessmentId}}",
+								"invitations"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"candidateEmail\": \"draft.test@example.com\"\n}"
+						},
+						"description": "Uses the unpublished emptyAssessmentId from the Assessment folder's negative tests."
+					}
+				},
+				{
+					"name": "[Negative] Duplicate invite (same email twice) -> expect 400",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/invitations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{assessmentId}}",
+								"invitations"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"candidateEmail\": \"new.candidate@example.com\"\n}"
+						},
+						"description": "Run the 'Send Invitation' request above twice with the same email to trigger this."
+					}
+				},
+				{
+					"name": "[Negative] Send invite with zero credit balance -> expect 400",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/invitations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{assessmentId}}",
+								"invitations"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"candidateEmail\": \"zero.credit.test@example.com\"\n}"
+						},
+						"description": "Only meaningful once the seeded company's creditBalance has been exhausted by prior sends."
+					}
+				},
+				{
+					"name": "[Negative] Evaluator send invitation -> expect 403",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/invitations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{assessmentId}}",
+								"invitations"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"candidateEmail\": \"nope@example.com\"\n}"
+						}
+					}
+				},
+				{
+					"name": "[Negative] Accept expired/invalid token -> expect 410 or 404",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/invitations/accept/expired-or-fake-token",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"invitations",
+								"accept",
+								"expired-or-fake-token"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test\",\n  \"password\": \"password123\"\n}"
+						}
+					}
+				},
+				{
+					"name": "[Negative] Accept an already-ACCEPTED token -> expect 400",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/invitations/accept/{{invitationToken}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"invitations",
+								"accept",
+								"{{invitationToken}}"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test\",\n  \"password\": \"password123\"\n}"
+						},
+						"description": "Run this again after invitationToken has already been accepted once."
 					}
 				}
 			]
@@ -525,12 +1610,19 @@
 								"key": "Authorization",
 								"value": "Bearer {{candidateAccessToken}}"
 							},
-							{ "key": "Content-Type", "value": "application/json" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies",
-							"host": ["{{baseUrl}}"],
-							"path": ["companies"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"companies"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -551,8 +1643,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/me",
-							"host": ["{{baseUrl}}"],
-							"path": ["companies", "me"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"companies",
+								"me"
+							]
 						}
 					}
 				},
@@ -568,8 +1665,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/me",
-							"host": ["{{baseUrl}}"],
-							"path": ["companies", "me"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"companies",
+								"me"
+							]
 						}
 					}
 				},
@@ -582,12 +1684,20 @@
 								"key": "Authorization",
 								"value": "Bearer {{companyOwnerAccessToken}}"
 							},
-							{ "key": "Content-Type", "value": "application/json" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/me",
-							"host": ["{{baseUrl}}"],
-							"path": ["companies", "me"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"companies",
+								"me"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -604,12 +1714,20 @@
 								"key": "Authorization",
 								"value": "Bearer {{assessmentCreatorAccessToken}}"
 							},
-							{ "key": "Content-Type", "value": "application/json" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/me",
-							"host": ["{{baseUrl}}"],
-							"path": ["companies", "me"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"companies",
+								"me"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -629,8 +1747,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/credits",
-							"host": ["{{baseUrl}}"],
-							"path": ["companies", "credits"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"companies",
+								"credits"
+							]
 						}
 					}
 				},
@@ -646,8 +1769,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/credits",
-							"host": ["{{baseUrl}}"],
-							"path": ["companies", "credits"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"companies",
+								"credits"
+							]
 						}
 					}
 				},
@@ -663,8 +1791,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/credits",
-							"host": ["{{baseUrl}}"],
-							"path": ["companies", "credits"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"companies",
+								"credits"
+							]
 						}
 					}
 				},
@@ -677,12 +1810,21 @@
 								"key": "Authorization",
 								"value": "Bearer {{companyOwnerAccessToken}}"
 							},
-							{ "key": "Content-Type", "value": "application/json" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/team/invite",
-							"host": ["{{baseUrl}}"],
-							"path": ["companies", "team", "invite"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"companies",
+								"team",
+								"invite"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -700,12 +1842,21 @@
 								"key": "Authorization",
 								"value": "Bearer {{assessmentCreatorAccessToken}}"
 							},
-							{ "key": "Content-Type", "value": "application/json" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/team/invite",
-							"host": ["{{baseUrl}}"],
-							"path": ["companies", "team", "invite"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"companies",
+								"team",
+								"invite"
+							]
 						},
 						"body": {
 							"mode": "raw",
@@ -717,11 +1868,23 @@
 					"name": "Accept Team Invitation (new user)",
 					"request": {
 						"method": "POST",
-						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/team/accept/{{teamInviteToken}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["companies", "team", "accept", "{{teamInviteToken}}"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"companies",
+								"team",
+								"accept",
+								"{{teamInviteToken}}"
+							]
 						},
 						"body": {
 							"mode": "raw",

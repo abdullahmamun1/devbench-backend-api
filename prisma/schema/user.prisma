@@ -5,9 +5,12 @@ model User {
   passwordHash     String?
   role             UserRole          @default(CANDIDATE)
   companyId        String?
-  provider         String            @default("email")
+  provider         AuthProvider       @default(CREDENTIALS)
+  googleId         String?     
+  emailVerified    Boolean           @default(false)
   isActive         Boolean           @default(true)
   status           UserStatus        @default(ACTIVE)
+  isDeleted        Boolean           @default(false)
   deletedAt        DateTime?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt

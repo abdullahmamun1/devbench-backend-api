@@ -290,6 +290,7 @@ const acceptInvitation = async (
 					email: invitation.candidateEmail,
 					passwordHash,
 					role: "CANDIDATE",
+					emailVerified: true,
 				},
 			});
 

@@ -16,6 +16,7 @@ const getMyProfile = async (userId: string) => {
 			createdAt: true,
 			updatedAt: true,
 			candidateProfile: true,
+			emailVerified: true,
 			company: {
 				select: {
 					id: true,
@@ -88,6 +89,7 @@ const updateMyProfile = async (
 				role: true,
 				companyId: true,
 				status: true,
+				provider: true,
 				createdAt: true,
 				updatedAt: true,
 				candidateProfile: true,

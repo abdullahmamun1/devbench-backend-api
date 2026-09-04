@@ -1,25 +1,27 @@
 # API Plan — DevBench Platform
 
-**Total endpoints:** 27 (exceeds 20+ requirement)
+**Total endpoints:** 32 (exceeds 20+ requirement)
 
 All routes versioned under `/api/v1/`
 
 ---
 
-## Authentication (3 endpoints)
+## Authentication (8 endpoints)
 
-Better Auth handles the OAuth flows internally. These are our custom endpoints:
+Custom JWT auth (access + refresh tokens, delivered as httpOnly cookies and in the response body). No Better Auth — Google sign-in is verified directly via `google-auth-library` against the ID token the frontend obtains from Google, then bridged into the same JWT pair as every other login path.
 
 | Method | Route | Roles | Purpose |
 |---|---|---|---|
-| POST | `/auth/register` | Public | Email/password registration (creates CANDIDATE or COMPANY_OWNER) |
-| POST | `/auth/login` | Public | Email/password login, returns session |
-| POST | `/auth/logout` | Authenticated | Clear session |
+| POST | `/auth/register` | Public | Creates the user immediately (`emailVerified: false`), creates the Company in the same transaction if `role: COMPANY_OWNER`, emails a 6-digit OTP. Returns `{ email, otpExpiresInSeconds }` — no tokens yet |
+| POST | `/auth/verify-email` | Public | Verifies the OTP, sets `emailVerified: true`, sends the welcome email, returns tokens |
+| POST | `/auth/login` | Public | Email/password login — rejects with `403` if `emailVerified` is still `false` |
+| POST | `/auth/google` | Public | Verifies a Google ID token server-side; logs in an existing user (linking `googleId` + auto-verifying if they registered by password first) or registers a new one (`role`/`companyName` optional in the payload) |
+| POST | `/auth/forgot-password` | Public | Emails a 6-digit OTP (5 min TTL) for a verified, non-Google account. Rejects unverified/suspended/deleted/Google-only accounts |
+| POST | `/auth/reset-password` | Public | Verifies the OTP and sets a new password; sends a confirmation email |
+| POST | `/auth/refresh-token` | Public (valid refresh token required) | Issues a new access token |
+| POST | `/auth/logout` | Authenticated | Clears both auth cookies |
 
-Better Auth provides at `/api/v1/auth/*`:
-- `/auth/sign-in/google` — Google OAuth start
-- `/auth/callback/google` — Google OAuth callback
-- `/auth/session` — Get current session
+Registering with an email that already has an unverified account resends a fresh OTP and refreshes name/password rather than rejecting — role/company are locked in on first registration and can't be changed by a resend. Forgot/reset-password are rate-limited the same as register/login (`rateLimiter("auth")`) to prevent email-bombing another user's inbox.
 
 ---
 
@@ -124,7 +126,7 @@ Better Auth provides at `/api/v1/auth/*`:
 
 | Category | Count |
 |---|---|
-| Authentication | 3 |
+| Authentication | 8 |
 | User & Profile | 3 |
 | Company Management | 3 |
 | Problem Bank | 5 |
@@ -134,7 +136,7 @@ Better Auth provides at `/api/v1/auth/*`:
 | Evaluation | 2 |
 | Payments | 3 |
 | Admin | 7 |
-| **Total** | **27** |
+| **Total** | **32** |
 
 ---
 
@@ -159,7 +161,7 @@ Better Auth provides at `/api/v1/auth/*`:
 - Queries filter `WHERE deletedAt IS NULL` by default
 
 ### Rate Limiting (via @upstash/ratelimit)
-- `/auth/login`: 5 requests / 15 minutes per IP
+- `/auth/register`, `/auth/login`, `/auth/forgot-password`, `/auth/reset-password`: 10 requests / minute per IP (`rateLimiter("auth")`)
 - `/invitations`: 10 requests / hour per company
 - `/attempts/:id/submit`: 30 requests / minute per attempt (prevent spam during timer)
 

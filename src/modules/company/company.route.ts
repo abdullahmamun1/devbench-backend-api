@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { auth } from "../../middleware/auth";
+import { auth, optionalAuth } from "../../middleware/auth";
 import { validateRequest } from "../../middleware/validateRequest";
 import { companyController } from "./company.controller";
 import { companyValidation } from "./company.validation";
@@ -35,6 +35,10 @@ router.post(
 	companyController.inviteTeamMember,
 );
 
-router.post("/team/accept/:token", companyController.acceptTeamInvitation);
+router.post(
+	"/team/accept/:token",
+	optionalAuth(),
+	companyController.acceptTeamInvitation,
+);
 
 export const companyRoutes = router;

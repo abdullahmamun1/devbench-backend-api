@@ -12,6 +12,11 @@ enum UserStatus {
   DELETED
 }
 
+enum AuthProvider {
+  CREDENTIALS
+  GOOGLE
+}
+
 enum AssessmentStatus {
   DRAFT
   PUBLISHED

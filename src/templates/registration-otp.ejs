@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Registration</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; color: #f8fafc;">
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="100%" style="max-width: 500px; margin: 40px auto; background-color: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #334155; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);">
+        
+        <!-- Top Tech Gradient Bar -->
+        <tr>
+            <td height="4" style="background: linear-gradient(90deg, #3b82f6, #6366f1);"></td>
+        </tr>
+
+        <!-- Header Section -->
+        <tr>
+            <td style="padding: 32px 32px 16px 32px; text-align: center;">
+                <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #3b82f6; display: block; margin-bottom: 8px;">DevBench Security</span>
+                <h1 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 600; letter-spacing: -0.5px;">Verification Code</h1>
+            </td>
+        </tr>
+
+        <!-- Body Section -->
+        <tr>
+            <td style="padding: 0 32px 32px 32px;">
+                <p style="font-size: 15px; line-height: 1.6; color: #cbd5e1; margin-top: 0; margin-bottom: 24px; text-align: center;">
+                    Please use the following One-Time Password (OTP) to complete your verification pipeline. This code is valid for <strong><%= locals.expiresInMinutes ? expiresInMinutes : '10' %> minutes</strong>.
+
+                </p>
+
+                <!-- OTP Presentation Box -->
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 24px auto;">
+                    <tr>
+                        <td style="background-color: #0f172a; border: 1px solid #475569; border-radius: 8px; padding: 14px 32px; text-align: center; letter-spacing: 6px;">
+                            <span style="font-family: 'Courier New', Courier, monospace; font-size: 32px; font-weight: 700; color: #3b82f6; display: inline-block; padding-left: 6px;"><%= otp %></span>
+                        </td>
+                    </tr>
+                </table>
+
+                <p style="font-size: 14px; line-height: 1.5; color: #64748b; margin-bottom: 0; text-align: center;">
+                    If you did not initiate this authentication handshake, you can safely ignore this security transmission.
+                </p>
+            </td>
+        </tr>
+
+        <!-- Footer Section -->
+        <tr>
+            <td style="background-color: #0f172a; padding: 20px 32px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #334155;">
+                <p style="margin: 0 0 4px 0;">&copy; <%= new Date().getFullYear() %> DevBench Platform. All rights reserved.</p>
+                <p style="margin: 0; line-height: 1.4;">Automated security transaction engine pipeline.</p>
+            </td>
+        </tr>
+
+    </table>
+
+</body>
+</html>
