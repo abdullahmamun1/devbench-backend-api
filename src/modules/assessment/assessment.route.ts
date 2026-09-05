@@ -6,6 +6,7 @@ import { invitationController } from "../invitation/invitation.controller";
 import { invitationValidation } from "../invitation/invitation.validation";
 import { assessmentController } from "./assessment.controller";
 import { assessmentValidation } from "./assessment.validation";
+import { attemptController } from "../attempt/attempt.controller";
 
 const router = Router();
 
@@ -80,6 +81,12 @@ router.get(
 	"/:id/invitations",
 	auth(UserRole.ADMIN, UserRole.ASSESSMENT_CREATOR, UserRole.COMPANY_OWNER),
 	invitationController.getAllInvitations,
+);
+
+router.post(
+	"/:id/attempts/start",
+	auth(UserRole.CANDIDATE),
+	attemptController.startAttempt,
 );
 
 export const assessmentRoutes = router;

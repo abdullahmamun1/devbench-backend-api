@@ -5,6 +5,7 @@ import { companyRoutes } from "../modules/company/company.route";
 import { invitationRoutes } from "../modules/invitation/invitation.route";
 import { problemRoutes } from "../modules/problem/problem.route";
 import { userRoutes } from "../modules/user/user.route";
+import { attemptRoutes } from "../modules/attempt/attempt.route";
 
 const router = Router();
 
@@ -32,6 +33,10 @@ const moduleRoutes = [
 	{
 		path: "/invitations",
 		route: invitationRoutes,
+	},
+	{
+		path: "/attempts",
+		route: attemptRoutes,
 	},
 ];
 
