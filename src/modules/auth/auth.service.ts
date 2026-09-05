@@ -240,6 +240,10 @@ const loginUser = async (payload: ILoginPayload) => {
 		throw createError(403, "Your account has been suspended");
 	}
 
+	if (user.company?.status === "SUSPENDED") {
+		throw createError(403, "Your company's account has been suspended");
+	}
+
 	if (!user.passwordHash) {
 		throw createError(
 			400,

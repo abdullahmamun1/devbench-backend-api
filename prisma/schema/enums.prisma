@@ -12,6 +12,11 @@ enum UserStatus {
   DELETED
 }
 
+enum CompanyStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 enum AuthProvider {
   CREDENTIALS
   GOOGLE
