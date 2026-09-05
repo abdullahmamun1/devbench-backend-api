@@ -60,7 +60,22 @@ const upsertSubmission = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
-const finalSubmit = catchAsync(async (req: Request, res: Response) => {});
+const finalSubmit = catchAsync(async (req: Request, res: Response) => {
+	const attemptId = req.params.id as string;
+	const caller: ICallerInfo = {
+		userId: req.user!.userId,
+		role: req.user!.role,
+		companyId: req.user!.companyId,
+	};
+	const result = await attemptService.finalSubmit(attemptId, caller);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Attempt submitted successfully",
+		data: result,
+	});
+});
 
 export const attemptController = {
 	startAttempt,

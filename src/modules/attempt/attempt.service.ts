@@ -350,7 +350,35 @@ const upsertSubmission = async (
 	});
 };
 
-const finalSubmit = async (attemptId: string, caller: ICallerInfo) => {};
+const finalSubmit = async (attemptId: string, caller: ICallerInfo) => {
+	const found = await prisma.attempt.findFirst({
+		where: { id: attemptId, candidateId: caller.userId },
+	});
+
+	if (!found) {
+		throw createError(404, "Attempt not found");
+	}
+
+	if (found.status !== "IN_PROGRESS") {
+		const current = await ensureNotExpired(found, caller);
+		throw createError(
+			400,
+			`This attempt is already ${current.status.toLowerCase()}`,
+		);
+	}
+
+	if (found.expiresAt && found.expiresAt < new Date()) {
+		// Already past expiry — auto-finalize instead of erroring.
+		return finalizeAttempt(
+			attemptId,
+			found.assessmentId,
+			caller,
+			"AUTO_EXPIRY",
+		);
+	}
+
+	return finalizeAttempt(attemptId, found.assessmentId, caller, "MANUAL");
+};
 
 export const attemptService = {
 	startAttempt,

@@ -16,4 +16,10 @@ router.post(
 	attemptController.upsertSubmission,
 );
 
+router.post(
+	"/:id/submit",
+	auth(UserRole.CANDIDATE),
+	attemptController.finalSubmit,
+);
+
 export const attemptRoutes = router;
