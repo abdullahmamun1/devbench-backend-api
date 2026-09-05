@@ -10,6 +10,7 @@ export default {
 	app_url: process.env.APP_URL!,
 	registration_otp_ttl_seconds: process.env.REGISTRATION_OTP_TTL_SECONDS!,
 	forgot_password_otp_ttl_seconds: process.env.FORGOT_PASSWORD_OTP_TTL_SECONDS!,
+	credit_price_in_cents: Number(process.env.CREDIT_PRICE_IN_CENTS) || 100, // $1.00/credit default
 	bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS!,
 	jwt_access_secret: process.env.JWT_ACCESS_SECRET!,
 	jwt_refresh_secret: process.env.JWT_REFRESH_SECRET!,

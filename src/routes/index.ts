@@ -5,6 +5,7 @@ import { authRoutes } from "../modules/auth/auth.route";
 import { companyRoutes } from "../modules/company/company.route";
 import { evaluationRoutes } from "../modules/evaluation/evaluation.route";
 import { invitationRoutes } from "../modules/invitation/invitation.route";
+import { paymentRoutes } from "../modules/payment/payment.route";
 import { problemRoutes } from "../modules/problem/problem.route";
 import { userRoutes } from "../modules/user/user.route";
 
@@ -42,6 +43,10 @@ const moduleRoutes = [
 	{
 		path: "/evaluations",
 		route: evaluationRoutes,
+	},
+	{
+		path: "/payments",
+		route: paymentRoutes,
 	},
 ];
 
