@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { assessmentRoutes } from "../modules/assessment/assessment.route";
+import { attemptRoutes } from "../modules/attempt/attempt.route";
 import { authRoutes } from "../modules/auth/auth.route";
 import { companyRoutes } from "../modules/company/company.route";
+import { evaluationRoutes } from "../modules/evaluation/evaluation.route";
 import { invitationRoutes } from "../modules/invitation/invitation.route";
 import { problemRoutes } from "../modules/problem/problem.route";
 import { userRoutes } from "../modules/user/user.route";
-import { attemptRoutes } from "../modules/attempt/attempt.route";
-import { evaluationRoutes } from "../modules/evaluation/evaluation.route";
 
 const router = Router();
 

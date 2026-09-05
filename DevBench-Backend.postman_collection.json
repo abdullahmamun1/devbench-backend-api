@@ -116,6 +116,30 @@
 		{
 			"key": "resetPasswordOtp",
 			"value": ""
+		},
+		{
+			"key": "attemptId",
+			"value": ""
+		},
+		{
+			"key": "submissionResultId",
+			"value": ""
+		},
+		{
+			"key": "mcqOptionId",
+			"value": ""
+		},
+		{
+			"key": "otherCompanySubmissionResultId",
+			"value": ""
+		},
+		{
+			"key": "mcqProblemId",
+			"value": ""
+		},
+		{
+			"key": "codingProblemId",
+			"value": ""
 		}
 	],
 	"item": [
@@ -1347,6 +1371,352 @@
 							"raw": "{\n  \"name\": \"Test\",\n  \"password\": \"password123\"\n}"
 						},
 						"description": "Run this again after invitationToken has already been accepted once."
+					}
+				}
+			]
+		},
+		{
+			"name": "Attempt",
+			"item": [
+				{
+					"name": "Start Attempt - Candidate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const res = pm.response.json();",
+									"    pm.collectionVariables.set('attemptId', res.data.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/attempts/start",
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}", "attempts", "start"]
+						},
+						"description": "Requires an ACCEPTED invitation for this candidate on this assessment (see Invitation folder). Calling this again while IN_PROGRESS resumes the same attempt rather than creating a new one."
+					}
+				},
+				{
+					"name": "Get Attempt - Candidate",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/attempts/{{attemptId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["attempts", "{{attemptId}}"]
+						},
+						"description": "Response should contain no isCorrect fields on mcqOptions and no hidden test cases \u2014 verify this manually when checking the response."
+					}
+				},
+				{
+					"name": "Submit Answer (MCQ)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/attempts/{{attemptId}}/submissions",
+							"host": ["{{baseUrl}}"],
+							"path": ["attempts", "{{attemptId}}", "submissions"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"problemId\": \"{{problemId}}\",\n  \"selectedOptionId\": \"{{mcqOptionId}}\"\n}"
+						},
+						"description": "problemId must be attached to this attempt's assessment. mcqOptionId \u2014 copy a real McqOption id from the 'Get Attempt' response's problems[].problem.mcqOptions array."
+					}
+				},
+				{
+					"name": "[Negative] Submit CODING fields to an MCQ problem -> expect 400",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/attempts/{{attemptId}}/submissions",
+							"host": ["{{baseUrl}}"],
+							"path": ["attempts", "{{attemptId}}", "submissions"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"problemId\": \"{{problemId}}\",\n  \"code\": \"print('hello')\",\n  \"language\": \"python\"\n}"
+						},
+						"description": "Confirms the reject-wrong-fields-for-type rule \u2014 sending code/language for an MCQ problem should fail, not silently ignore the mismatch."
+					}
+				},
+				{
+					"name": "Final Submit - Candidate",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/attempts/{{attemptId}}/submit",
+							"host": ["{{baseUrl}}"],
+							"path": ["attempts", "{{attemptId}}", "submit"]
+						},
+						"description": "MCQ answers auto-grade immediately. CODING/WRITTEN answers with content go to PENDING_REVIEW. totalScore stays null until nothing is pending."
+					}
+				},
+				{
+					"name": "[Negative] Submit after final submit -> expect 400",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/attempts/{{attemptId}}/submissions",
+							"host": ["{{baseUrl}}"],
+							"path": ["attempts", "{{attemptId}}", "submissions"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"problemId\": \"{{problemId}}\",\n  \"selectedOptionId\": \"{{mcqOptionId}}\"\n}"
+						},
+						"description": "Attempt is already SUBMITTED at this point \u2014 expect a 400, not a silent overwrite."
+					}
+				},
+				{
+					"name": "[Negative] Start attempt without an accepted invitation -> expect 403",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/attempts/start",
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}", "attempts", "start"]
+						},
+						"description": "Uses a non-invited account to confirm the invitation-required gate. Swap the token for any account without an ACCEPTED invitation on this assessment."
+					}
+				}
+			]
+		},
+		{
+			"name": "Evaluation",
+			"item": [
+				{
+					"name": "Get Pending Submissions - Evaluator",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const res = pm.response.json();",
+									"    if (res?.data?.length) {",
+									"        pm.collectionVariables.set('submissionResultId', res.data[0].id);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/evaluations/pending?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["evaluations", "pending"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Auto-captures the first pending submissionResultId, if any exist \u2014 run a CODING/WRITTEN submission through Attempt's final-submit first to populate this queue."
+					}
+				},
+				{
+					"name": "Get Submission Detail - Evaluator",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/evaluations/{{submissionResultId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["evaluations", "{{submissionResultId}}"]
+						},
+						"description": "Unlike the candidate-facing attempt view, this exposes hidden test cases and isCorrect \u2014 intentional, evaluators need the full picture."
+					}
+				},
+				{
+					"name": "Grade Submission - Evaluator",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/evaluations/{{submissionResultId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["evaluations", "{{submissionResultId}}"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"score\": 8,\n  \"status\": \"PASSED\",\n  \"feedback\": \"Clean solution, handles all edge cases correctly.\"\n}"
+						}
+					}
+				},
+				{
+					"name": "[Negative] Re-grade an already-graded submission -> expect 400",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/evaluations/{{submissionResultId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["evaluations", "{{submissionResultId}}"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"score\": 5,\n  \"status\": \"PARTIAL\"\n}"
+						},
+						"description": "Run this again after 'Grade Submission' above already succeeded once \u2014 grading is final per the Day 4 decision."
+					}
+				},
+				{
+					"name": "[Negative] Score exceeding maxScore -> expect 400",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/evaluations/{{submissionResultId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["evaluations", "{{submissionResultId}}"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"score\": 9999,\n  \"status\": \"PASSED\"\n}"
+						},
+						"description": "Use a fresh, still-PENDING_REVIEW submissionResultId for this test since the one above may already be graded."
+					}
+				},
+				{
+					"name": "[Negative] Candidate access to /evaluations -> expect 403",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/evaluations/pending",
+							"host": ["{{baseUrl}}"],
+							"path": ["evaluations", "pending"]
+						}
+					}
+				},
+				{
+					"name": "[Negative] Cross-company submission access -> expect 404",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/evaluations/{{otherCompanySubmissionResultId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["evaluations", "{{otherCompanySubmissionResultId}}"]
+						},
+						"description": "Set otherCompanySubmissionResultId to a pending submission belonging to a different company's assessment to confirm companyId scoping through the submission -> attempt -> assessment chain."
 					}
 				}
 			]

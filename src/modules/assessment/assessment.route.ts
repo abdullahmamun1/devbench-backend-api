@@ -2,11 +2,11 @@ import { Router } from "express";
 import { UserRole } from "../../../generated/prisma";
 import { auth } from "../../middleware/auth";
 import { validateRequest } from "../../middleware/validateRequest";
+import { attemptController } from "../attempt/attempt.controller";
 import { invitationController } from "../invitation/invitation.controller";
 import { invitationValidation } from "../invitation/invitation.validation";
 import { assessmentController } from "./assessment.controller";
 import { assessmentValidation } from "./assessment.validation";
-import { attemptController } from "../attempt/attempt.controller";
 
 const router = Router();
 

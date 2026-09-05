@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { UserRole } from "../../../generated/prisma";
 import { auth } from "../../middleware/auth";
 import { validateRequest } from "../../middleware/validateRequest";
 import { problemController } from "./problem.controller";
@@ -8,33 +9,43 @@ const router = Router();
 
 router.post(
 	"/",
-	auth("ADMIN", "COMPANY_OWNER", "ASSESSMENT_CREATOR"),
+	auth(UserRole.ADMIN, UserRole.COMPANY_OWNER, UserRole.ASSESSMENT_CREATOR),
 	validateRequest(problemValidation.createProblemValidationSchema),
 	problemController.createProblem,
 );
 
 router.get(
 	"/",
-	auth("ADMIN", "COMPANY_OWNER", "ASSESSMENT_CREATOR", "EVALUATOR"),
+	auth(
+		UserRole.ADMIN,
+		UserRole.COMPANY_OWNER,
+		UserRole.ASSESSMENT_CREATOR,
+		UserRole.EVALUATOR,
+	),
 	problemController.getAllProblems,
 );
 
 router.get(
 	"/:id",
-	auth("ADMIN", "COMPANY_OWNER", "ASSESSMENT_CREATOR", "EVALUATOR"),
+	auth(
+		UserRole.ADMIN,
+		UserRole.COMPANY_OWNER,
+		UserRole.ASSESSMENT_CREATOR,
+		UserRole.EVALUATOR,
+	),
 	problemController.getProblemById,
 );
 
 router.patch(
 	"/:id",
-	auth("ADMIN", "COMPANY_OWNER", "ASSESSMENT_CREATOR"),
+	auth(UserRole.ADMIN, UserRole.COMPANY_OWNER, UserRole.ASSESSMENT_CREATOR),
 	validateRequest(problemValidation.updateProblemValidationSchema),
 	problemController.updateProblem,
 );
 
 router.delete(
 	"/:id",
-	auth("ADMIN", "COMPANY_OWNER", "ASSESSMENT_CREATOR"),
+	auth(UserRole.ADMIN, UserRole.COMPANY_OWNER, UserRole.ASSESSMENT_CREATOR),
 	problemController.deleteProblem,
 );
 
