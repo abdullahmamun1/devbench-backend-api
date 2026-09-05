@@ -1,4 +1,4 @@
-import type { Prisma } from "../../../generated/prisma";
+import type { Prisma, ProblemType } from "../../../generated/prisma";
 import { prisma } from "../../lib/prisma";
 import { writeAuditLog } from "../../utils/auditLog";
 import { createError } from "../../utils/createError";
@@ -263,11 +263,92 @@ const getAttemptById = async (attemptId: string, caller: ICallerInfo) => {
 	};
 };
 
+const validateAnswerShape = (
+	problemType: ProblemType,
+	payload: ISubmitAnswerPayload,
+) => {
+	if (problemType === "MCQ") {
+		if (!payload.selectedOptionId) {
+			throw createError(400, "selectedOptionId is required for an MCQ problem");
+		}
+		if (payload.answerText || payload.code || payload.language) {
+			throw createError(400, "MCQ submissions only accept selectedOptionId");
+		}
+	} else if (problemType === "WRITTEN") {
+		if (!payload.answerText) {
+			throw createError(400, "answerText is required for a WRITTEN problem");
+		}
+		if (payload.selectedOptionId || payload.code || payload.language) {
+			throw createError(400, "WRITTEN submissions only accept answerText");
+		}
+	} else {
+		if (!payload.code) {
+			throw createError(400, "code is required for a CODING problem");
+		}
+		if (payload.selectedOptionId || payload.answerText) {
+			throw createError(
+				400,
+				"CODING submissions only accept code and language",
+			);
+		}
+	}
+};
+
 const upsertSubmission = async (
 	attemptId: string,
 	payload: ISubmitAnswerPayload,
 	caller: ICallerInfo,
-) => {};
+) => {
+	const found = await prisma.attempt.findFirst({
+		where: { id: attemptId, candidateId: caller.userId },
+	});
+
+	if (!found) {
+		throw createError(404, "Attempt not found");
+	}
+
+	const attempt = await ensureNotExpired(found, caller);
+
+	if (attempt.status !== "IN_PROGRESS") {
+		throw createError(
+			400,
+			attempt.status === "SUBMITTED"
+				? "Your time expired and this attempt was automatically submitted"
+				: `This attempt is ${attempt.status.toLowerCase()} and cannot accept answers`,
+		);
+	}
+
+	const assessmentProblem = await prisma.assessmentProblem.findFirst({
+		where: { assessmentId: attempt.assessmentId, problemId: payload.problemId },
+		include: { problem: true },
+	});
+
+	if (!assessmentProblem) {
+		throw createError(404, "This problem is not part of this assessment");
+	}
+
+	validateAnswerShape(assessmentProblem.problem.type, payload);
+
+	return prisma.submission.upsert({
+		where: {
+			attemptId_problemId: { attemptId, problemId: payload.problemId },
+		},
+		create: {
+			attemptId,
+			problemId: payload.problemId,
+			selectedOptionId: payload.selectedOptionId,
+			answerText: payload.answerText,
+			code: payload.code,
+			language: payload.language,
+		},
+		update: {
+			selectedOptionId: payload.selectedOptionId ?? null,
+			answerText: payload.answerText ?? null,
+			code: payload.code ?? null,
+			language: payload.language ?? null,
+		},
+	});
+};
 
 const finalSubmit = async (attemptId: string, caller: ICallerInfo) => {};
 

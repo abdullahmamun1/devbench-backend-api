@@ -39,7 +39,26 @@ const getAttemptById = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
-const upsertSubmission = catchAsync(async (req: Request, res: Response) => {});
+const upsertSubmission = catchAsync(async (req: Request, res: Response) => {
+	const attemptId = req.params.id as string;
+	const caller: ICallerInfo = {
+		userId: req.user!.userId,
+		role: req.user!.role,
+		companyId: req.user!.companyId,
+	};
+	const result = await attemptService.upsertSubmission(
+		attemptId,
+		req.body,
+		caller,
+	);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Answer saved successfully",
+		data: result,
+	});
+});
 
 const finalSubmit = catchAsync(async (req: Request, res: Response) => {});
 
