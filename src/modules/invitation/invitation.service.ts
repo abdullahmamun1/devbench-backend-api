@@ -4,6 +4,7 @@ import type { Prisma } from "../../../generated/prisma";
 import config from "../../config";
 import { transporter } from "../../lib/nodemailer";
 import { prisma } from "../../lib/prisma";
+import { writeAuditLog } from "../../utils/auditLog";
 import { createError } from "../../utils/createError";
 import { resolveCompanyScope } from "../../utils/scoping";
 import type {
@@ -12,7 +13,6 @@ import type {
 	ICreateInvitationPayload,
 	IInvitationFilterQuery,
 } from "./invitation.interface";
-import { writeAuditLog } from "../../utils/auditLog";
 
 const createInvitation = async (
 	assessmentId: string,

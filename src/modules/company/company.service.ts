@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import config from "../../config";
 import { transporter } from "../../lib/nodemailer";
 import { prisma } from "../../lib/prisma";
+import { writeAuditLog } from "../../utils/auditLog";
 import { createError } from "../../utils/createError";
 import { requireCompanyId } from "../../utils/scoping";
 import type {
@@ -11,7 +12,6 @@ import type {
 	IInviteTeamMemberPayload,
 	IUpdateCompanyPayload,
 } from "./company.interface";
-import { writeAuditLog } from "../../utils/auditLog";
 
 const createCompany = async (
 	payload: ICreateCompanyPayload,

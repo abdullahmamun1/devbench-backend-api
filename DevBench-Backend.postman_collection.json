@@ -134,13 +134,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/register",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"register"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "register"]
 						},
 						"body": {
 							"mode": "raw",
@@ -161,13 +156,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/register",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"register"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "register"]
 						},
 						"body": {
 							"mode": "raw",
@@ -203,13 +193,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/verify-email",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"verify-email"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "verify-email"]
 						},
 						"body": {
 							"mode": "raw",
@@ -245,13 +230,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/google",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"google"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "google"]
 						},
 						"body": {
 							"mode": "raw",
@@ -272,13 +252,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/forgot-password",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"forgot-password"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "forgot-password"]
 						},
 						"body": {
 							"mode": "raw",
@@ -299,13 +274,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/reset-password",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"reset-password"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "reset-password"]
 						},
 						"body": {
 							"mode": "raw",
@@ -340,13 +310,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"login"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
 						},
 						"body": {
 							"mode": "raw",
@@ -380,13 +345,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"login"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
 						},
 						"body": {
 							"mode": "raw",
@@ -420,13 +380,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"login"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
 						},
 						"body": {
 							"mode": "raw",
@@ -460,13 +415,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"login"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
 						},
 						"body": {
 							"mode": "raw",
@@ -503,13 +453,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"login"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
 						},
 						"body": {
 							"mode": "raw",
@@ -542,13 +487,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/auth/refresh-token",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"refresh-token"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "refresh-token"]
 						},
 						"body": {
 							"mode": "raw",
@@ -563,13 +503,8 @@
 						"method": "POST",
 						"url": {
 							"raw": "{{baseUrl}}/auth/logout",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"logout"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout"]
 						}
 					}
 				}
@@ -590,13 +525,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/users/me",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"users",
-								"me"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "me"]
 						}
 					}
 				},
@@ -616,13 +546,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/users/me",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"users",
-								"me"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "me"]
 						},
 						"body": {
 							"mode": "raw",
@@ -664,12 +589,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"problems"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["problems"]
 						},
 						"body": {
 							"mode": "raw",
@@ -693,12 +614,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"problems"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["problems"]
 						},
 						"body": {
 							"mode": "raw",
@@ -719,12 +636,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems?page=1&limit=10",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"problems"
-							],
+							"host": ["{{baseUrl}}"],
+							"path": ["problems"],
 							"query": [
 								{
 									"key": "page",
@@ -750,13 +663,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems/{{problemId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"problems",
-								"{{problemId}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["problems", "{{problemId}}"]
 						}
 					}
 				},
@@ -776,13 +684,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems/{{problemId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"problems",
-								"{{problemId}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["problems", "{{problemId}}"]
 						},
 						"body": {
 							"mode": "raw",
@@ -802,13 +705,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems/{{problemId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"problems",
-								"{{problemId}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["problems", "{{problemId}}"]
 						}
 					}
 				},
@@ -824,12 +722,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"problems"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["problems"]
 						}
 					}
 				},
@@ -845,13 +739,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems/{{problemId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"problems",
-								"{{problemId}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["problems", "{{problemId}}"]
 						}
 					}
 				},
@@ -871,13 +760,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems/{{otherCompanyProblemId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"problems",
-								"{{otherCompanyProblemId}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["problems", "{{otherCompanyProblemId}}"]
 						},
 						"body": {
 							"mode": "raw",
@@ -898,13 +782,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/problems/{{otherCompanyProblemId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"problems",
-								"{{otherCompanyProblemId}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["problems", "{{otherCompanyProblemId}}"]
 						}
 					}
 				}
@@ -942,12 +821,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments"]
 						},
 						"body": {
 							"mode": "raw",
@@ -967,12 +842,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments?page=1&limit=10",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments"
-							],
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments"],
 							"query": [
 								{
 									"key": "page",
@@ -998,13 +869,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{assessmentId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{assessmentId}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}"]
 						}
 					}
 				},
@@ -1024,13 +890,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{assessmentId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{assessmentId}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1054,14 +915,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/problems",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{assessmentId}}",
-								"problems"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}", "problems"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1082,14 +937,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/publish",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{assessmentId}}",
-								"publish"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}", "publish"]
 						}
 					}
 				},
@@ -1122,12 +971,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1148,14 +993,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{emptyAssessmentId}}/publish",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{emptyAssessmentId}}",
-								"publish"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{emptyAssessmentId}}", "publish"]
 						},
 						"description": "Step 2 of 2: run the 'zero problems' create request above first, then run this."
 					}
@@ -1176,14 +1015,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/problems",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{assessmentId}}",
-								"problems"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}", "problems"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1208,12 +1041,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1233,13 +1062,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{otherCompanyAssessmentId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{otherCompanyAssessmentId}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{otherCompanyAssessmentId}}"]
 						},
 						"description": "Set otherCompanyAssessmentId to an assessment id owned by a different company to confirm companyId scoping."
 					}
@@ -1256,13 +1080,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{assessmentId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{assessmentId}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}"]
 						}
 					}
 				}
@@ -1297,14 +1116,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/invitations",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{assessmentId}}",
-								"invitations"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}", "invitations"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1325,14 +1138,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/invitations",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{assessmentId}}",
-								"invitations"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}", "invitations"]
 						}
 					}
 				},
@@ -1343,14 +1150,8 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/invitations/accept/{{invitationToken}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"invitations",
-								"accept",
-								"{{invitationToken}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["invitations", "accept", "{{invitationToken}}"]
 						}
 					}
 				},
@@ -1366,14 +1167,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/invitations/accept/{{invitationToken}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"invitations",
-								"accept",
-								"{{invitationToken}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["invitations", "accept", "{{invitationToken}}"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1398,14 +1193,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/invitations/accept/{{invitationToken}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"invitations",
-								"accept",
-								"{{invitationToken}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["invitations", "accept", "{{invitationToken}}"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1430,14 +1219,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{emptyAssessmentId}}/invitations",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{emptyAssessmentId}}",
-								"invitations"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{emptyAssessmentId}}", "invitations"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1462,14 +1245,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/invitations",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{assessmentId}}",
-								"invitations"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}", "invitations"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1494,14 +1271,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/invitations",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{assessmentId}}",
-								"invitations"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}", "invitations"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1526,14 +1297,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/invitations",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"assessments",
-								"{{assessmentId}}",
-								"invitations"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}", "invitations"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1553,14 +1318,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/invitations/accept/expired-or-fake-token",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"invitations",
-								"accept",
-								"expired-or-fake-token"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["invitations", "accept", "expired-or-fake-token"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1580,14 +1339,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/invitations/accept/{{invitationToken}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"invitations",
-								"accept",
-								"{{invitationToken}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["invitations", "accept", "{{invitationToken}}"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1617,12 +1370,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"companies"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["companies"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1643,13 +1392,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/me",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"companies",
-								"me"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "me"]
 						}
 					}
 				},
@@ -1665,13 +1409,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/me",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"companies",
-								"me"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "me"]
 						}
 					}
 				},
@@ -1691,13 +1430,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/me",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"companies",
-								"me"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "me"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1721,13 +1455,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/me",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"companies",
-								"me"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "me"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1747,13 +1476,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/credits",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"companies",
-								"credits"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "credits"]
 						}
 					}
 				},
@@ -1769,13 +1493,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/credits",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"companies",
-								"credits"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "credits"]
 						}
 					}
 				},
@@ -1791,13 +1510,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/credits",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"companies",
-								"credits"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "credits"]
 						}
 					}
 				},
@@ -1817,14 +1531,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/team/invite",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"companies",
-								"team",
-								"invite"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "team", "invite"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1849,14 +1557,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/team/invite",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"companies",
-								"team",
-								"invite"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "team", "invite"]
 						},
 						"body": {
 							"mode": "raw",
@@ -1876,15 +1578,8 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/companies/team/accept/{{teamInviteToken}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"companies",
-								"team",
-								"accept",
-								"{{teamInviteToken}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "team", "accept", "{{teamInviteToken}}"]
 						},
 						"body": {
 							"mode": "raw",

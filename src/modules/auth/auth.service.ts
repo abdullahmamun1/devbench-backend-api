@@ -10,6 +10,7 @@ import { googleClient } from "../../lib/googleAuth";
 import { transporter } from "../../lib/nodemailer";
 import { prisma } from "../../lib/prisma";
 import { redis } from "../../lib/redis";
+import { writeAuditLog } from "../../utils/auditLog";
 import { createError } from "../../utils/createError";
 import { jwtUtils } from "../../utils/jwt";
 import type {
@@ -20,7 +21,6 @@ import type {
 	IResetPasswordPayload,
 	IVerifyEmailPayload,
 } from "./auth.interface";
-import { writeAuditLog } from "../../utils/auditLog";
 
 type UserWithCompany = Prisma.UserGetPayload<{ include: { company: true } }>;
 

@@ -20,6 +20,7 @@ model Submission {
   id               String            @id @default(uuid())
   attemptId        String
   problemId        String
+  selectedOptionId String?
   answerText       String?           @db.Text
   code             String?           @db.Text
   language         String?
@@ -27,11 +28,11 @@ model Submission {
   updatedAt        DateTime          @updatedAt
   attempt          Attempt           @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   problem          Problem           @relation(fields: [problemId], references: [id])
+  selectedOption   McqOption?        @relation(fields: [selectedOptionId], references: [id])
   submissionResult SubmissionResult?
 
   @@unique([attemptId, problemId])
 }
-
 model SubmissionResult {
   id           String                 @id @default(uuid())
   submissionId String                 @unique
@@ -45,3 +46,4 @@ model SubmissionResult {
   updatedAt    DateTime               @updatedAt
   submission   Submission             @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 }
+
