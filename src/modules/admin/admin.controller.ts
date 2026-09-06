@@ -91,7 +91,20 @@ const getPlatformStats = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
-const adjustCredits = catchAsync(async (req: Request, res: Response) => {});
+const adjustCredits = catchAsync(async (req: Request, res: Response) => {
+	const caller: ICallerInfo = {
+		userId: req.user!.userId,
+		role: req.user!.role,
+	};
+	const result = await adminService.adjustCredits(req.body, caller);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Credit balance adjusted successfully",
+		data: result,
+	});
+});
 
 export const adminController = {
 	listCompanies,

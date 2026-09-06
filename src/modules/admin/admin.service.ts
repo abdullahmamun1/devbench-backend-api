@@ -191,7 +191,58 @@ const getPlatformStats = async () => {
 const adjustCredits = async (
 	payload: ICreditAdjustPayload,
 	caller: ICallerInfo,
-) => {};
+) => {
+	return await prisma.$transaction(async (tx) => {
+		const company = await tx.company.findFirst({
+			where: { id: payload.companyId, deletedAt: null },
+		});
+
+		if (!company) {
+			throw createError(404, "Company not found");
+		}
+
+		const newBalance = company.creditBalance + payload.amount;
+
+		if (newBalance < 0) {
+			throw createError(
+				400,
+				`Adjustment would result in a negative balance (current: ${company.creditBalance})`,
+			);
+		}
+
+		const updatedCompany = await tx.company.update({
+			where: { id: payload.companyId },
+			data: { creditBalance: newBalance },
+		});
+
+		await tx.creditTransaction.create({
+			data: {
+				companyId: payload.companyId,
+				type: "ADJUSTMENT",
+				amount: payload.amount,
+				balanceAfter: newBalance,
+			},
+		});
+
+		await writeAuditLog(
+			{
+				actorId: caller.userId,
+				actorRole: caller.role as never,
+				action: "CREDIT_ADJUSTED",
+				entityType: "Company",
+				entityId: payload.companyId,
+				metadata: {
+					amount: payload.amount,
+					reason: payload.reason,
+					newBalance,
+				},
+			},
+			tx,
+		);
+
+		return updatedCompany;
+	});
+};
 
 export const adminService = {
 	listCompanies,
