@@ -7,6 +7,7 @@ import { attemptValidation } from "./attempt.validation";
 
 const router = Router();
 
+router.get("/me", auth(UserRole.CANDIDATE), attemptController.getMyAttempts);
 router.get("/:id", auth(UserRole.CANDIDATE), attemptController.getAttemptById);
 
 router.post(

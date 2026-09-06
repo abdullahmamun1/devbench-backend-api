@@ -13,6 +13,11 @@ import { redis } from "../../lib/redis";
 import { writeAuditLog } from "../../utils/auditLog";
 import { createError } from "../../utils/createError";
 import { jwtUtils } from "../../utils/jwt";
+import {
+	revokeRefreshToken,
+	storeRefreshToken,
+	verifyStoredRefreshToken,
+} from "../../utils/session";
 import type {
 	IForgotPasswordPayload,
 	IGoogleLoginPayload,
@@ -216,6 +221,8 @@ const verifyEmail = async (payload: IVerifyEmailPayload) => {
 		config.jwt_refresh_expires_in,
 	);
 
+	await storeRefreshToken(user.id, refreshToken);
+
 	return { user: userWithoutPassword, accessToken, refreshToken };
 };
 
@@ -278,6 +285,8 @@ const loginUser = async (payload: ILoginPayload) => {
 		config.jwt_refresh_secret,
 		config.jwt_refresh_expires_in,
 	);
+
+	await storeRefreshToken(user.id, refreshToken);
 
 	const { passwordHash, ...userWithoutPassword } = user;
 
@@ -450,11 +459,16 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
 		config.jwt_refresh_expires_in,
 	);
 
+	await storeRefreshToken(user.id, refreshToken);
+
 	return { accessToken, refreshToken, isNewUser };
 };
 
-const refreshToken = async (token: string) => {
-	const verified = jwtUtils.verifyToken(token, config.jwt_refresh_secret);
+const refreshToken = async (incomingToken: string) => {
+	const verified = jwtUtils.verifyToken(
+		incomingToken,
+		config.jwt_refresh_secret,
+	);
 
 	if (!verified.success) {
 		throw createError(401, "Invalid or expired refresh token");
@@ -462,16 +476,25 @@ const refreshToken = async (token: string) => {
 
 	const { id } = verified.data as JwtPayload;
 
-	const user = await prisma.user.findUnique({
-		where: { id },
-	});
+	const isValid = await verifyStoredRefreshToken(id, incomingToken);
 
-	if (!user) {
-		throw createError(404, "User no longer exists");
+	if (!isValid) {
+		// Either already rotated past, explicitly logged out, or a
+		// replayed/stolen older token — same response either way.
+		throw createError(401, "Session expired. Please log in again.");
 	}
 
-	if (user.status === "SUSPENDED") {
-		throw createError(403, "Your account has been suspended");
+	const user = await prisma.user.findUnique({
+		where: { id },
+		include: { company: true },
+	});
+
+	if (
+		!user ||
+		user.status === "SUSPENDED" ||
+		user.company?.status === "SUSPENDED"
+	) {
+		throw createError(403, "Account unavailable");
 	}
 
 	const jwtPayload = {
@@ -481,15 +504,20 @@ const refreshToken = async (token: string) => {
 		role: user.role,
 	};
 
-	const accessToken = jwtUtils.createToken(
+	const newAccessToken = jwtUtils.createToken(
 		jwtPayload,
 		config.jwt_access_secret,
 		config.jwt_access_expires_in,
 	);
+	const newRefreshToken = jwtUtils.createToken(
+		jwtPayload,
+		config.jwt_refresh_secret,
+		config.jwt_refresh_expires_in,
+	);
 
-	return {
-		accessToken,
-	};
+	await storeRefreshToken(user.id, newRefreshToken);
+
+	return { accessToken: newAccessToken, refreshToken: newRefreshToken };
 };
 
 const forgotPassword = async (payload: IForgotPasswordPayload) => {
@@ -622,6 +650,10 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
 	return null;
 };
 
+const logoutUser = async (userId: string) => {
+	await revokeRefreshToken(userId);
+};
+
 export const authService = {
 	registerUser,
 	verifyEmail,
@@ -630,4 +662,5 @@ export const authService = {
 	googleLogin,
 	forgotPassword,
 	resetPassword,
+	logoutUser,
 };

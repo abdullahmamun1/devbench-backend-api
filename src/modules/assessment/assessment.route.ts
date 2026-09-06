@@ -77,10 +77,27 @@ router.post(
 	invitationController.createInvitation,
 );
 
+router.post(
+	"/:id/invitations/:invitationId/resend",
+	auth(UserRole.ADMIN, UserRole.ASSESSMENT_CREATOR, UserRole.COMPANY_OWNER),
+	invitationController.resendInvitation,
+);
+
 router.get(
 	"/:id/invitations",
 	auth(UserRole.ADMIN, UserRole.ASSESSMENT_CREATOR, UserRole.COMPANY_OWNER),
 	invitationController.getAllInvitations,
+);
+
+router.get(
+	"/:id/results",
+	auth(
+		UserRole.ADMIN,
+		UserRole.ASSESSMENT_CREATOR,
+		UserRole.COMPANY_OWNER,
+		UserRole.EVALUATOR,
+	),
+	assessmentController.getAssessmentResults,
 );
 
 router.post(

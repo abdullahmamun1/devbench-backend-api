@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Verify your email</title>
+<title>Payment confirmed</title>
 </head>
 <body style="margin:0; padding:0; background-color:#f4f5f7; font-family:Arial, Helvetica, sans-serif;">
 	<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f5f7; padding:32px 0;">
@@ -16,24 +16,22 @@
 					</tr>
 					<tr>
 						<td style="padding:32px;">
-							<h1 style="margin:0 0 16px; font-size:20px; color:#111827;">Verify your email</h1>
-							<p style="margin:0 0 16px; font-size:15px; line-height:1.5; color:#374151;">
-								Hi <%= name %>,
-							</p>
+							<h1 style="margin:0 0 16px; font-size:20px; color:#111827;">Payment confirmed ✅</h1>
 							<p style="margin:0 0 24px; font-size:15px; line-height:1.5; color:#374151;">
-								Use the code below to verify your email address and finish setting up your DevBench account.
+								Thanks! Your credit purchase for <strong><%= companyName %></strong> was successful. Here's a summary:
 							</p>
-							<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+							<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb; border-radius:6px; margin-bottom:24px;">
 								<tr>
-									<td align="center" style="padding:16px 0;">
-										<span style="display:inline-block; font-size:32px; font-weight:bold; letter-spacing:8px; color:#111827; background-color:#f3f4f6; padding:16px 24px; border-radius:6px;">
-											<%= otp %>
-										</span>
-									</td>
+									<td style="padding:16px 20px; font-size:14px; color:#6b7280;">Credits purchased</td>
+									<td style="padding:16px 20px; font-size:14px; color:#111827; font-weight:bold; text-align:right;"><%= creditsPurchased %></td>
+								</tr>
+								<tr>
+									<td style="padding:0 20px 16px; font-size:14px; color:#6b7280; border-top:1px solid #e5e7eb;">Amount charged</td>
+									<td style="padding:0 20px 16px; font-size:14px; color:#111827; font-weight:bold; text-align:right; border-top:1px solid #e5e7eb;">$<%= amountPaid %></td>
 								</tr>
 							</table>
-							<p style="margin:24px 0 0; font-size:13px; line-height:1.5; color:#6b7280;">
-								This code expires in <%= otpExpiresInMinutes || 10 %> minutes. If you didn't request this, you can safely ignore this email.
+							<p style="margin:0; font-size:15px; line-height:1.5; color:#374151;">
+								These credits are now available in your company's balance and ready to use for sending candidate invitations.
 							</p>
 						</td>
 					</tr>

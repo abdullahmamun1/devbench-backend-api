@@ -1,4 +1,8 @@
+import path from "node:path";
+import ejs from "ejs";
 import type Stripe from "stripe";
+import config from "../../config";
+import { transporter } from "../../lib/nodemailer";
 import { prisma } from "../../lib/prisma";
 import { writeAuditLog } from "../../utils/auditLog";
 
@@ -42,6 +46,29 @@ const handleSessionCompleted = async (session: Stripe.Checkout.Session) => {
 		});
 
 		if (owner) {
+			try {
+				const templatePath = path.join(
+					process.cwd(),
+					"src/templates/payment-success.ejs",
+				);
+				const html = await ejs.renderFile(templatePath, {
+					companyName: (
+						await tx.company.findUnique({ where: { id: payment.companyId } })
+					)?.companyName,
+					creditsPurchased: payment.creditsPurchased,
+					amountPaid: (payment.amount / 100).toFixed(2),
+				});
+
+				await transporter.sendMail({
+					from: config.mail_from,
+					to: owner.email,
+					subject: "Payment confirmed — DevBench",
+					html,
+				});
+			} catch (emailError) {
+				console.error("Payment confirmation email failed:", emailError);
+			}
+
 			await writeAuditLog(
 				{
 					actorId: owner.id,

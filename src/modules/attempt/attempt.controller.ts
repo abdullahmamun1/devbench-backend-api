@@ -22,6 +22,16 @@ const startAttempt = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const getMyAttempts = catchAsync(async (req: Request, res: Response) => {
+	const result = await attemptService.getMyAttempts(req.user!.userId);
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Your attempts fetched successfully",
+		data: result,
+	});
+});
+
 const getAttemptById = catchAsync(async (req: Request, res: Response) => {
 	const attemptId = req.params.id as string;
 	const caller: ICallerInfo = {
@@ -79,6 +89,7 @@ const finalSubmit = catchAsync(async (req: Request, res: Response) => {
 
 export const attemptController = {
 	startAttempt,
+	getMyAttempts,
 	getAttemptById,
 	upsertSubmission,
 	finalSubmit,

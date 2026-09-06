@@ -160,6 +160,26 @@ const publishAssessment = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const getAssessmentResults = catchAsync(async (req: Request, res: Response) => {
+	const assessmentId = req.params.id as string;
+	const caller: ICallerInfo = {
+		userId: req.user!.userId,
+		role: req.user!.role,
+		companyId: req.user!.companyId,
+	};
+	const result = await assessmentService.getAssessmentResults(
+		assessmentId,
+		caller,
+	);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Assessment results fetched successfully",
+		data: result,
+	});
+});
+
 export const assessmentController = {
 	createAssessment,
 	getAllAssessments,
@@ -169,4 +189,5 @@ export const assessmentController = {
 	attachProblem,
 	detachProblem,
 	publishAssessment,
+	getAssessmentResults,
 };

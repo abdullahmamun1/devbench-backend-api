@@ -189,6 +189,27 @@ const getAllInvitations = async (
 	};
 };
 
+const getMyInvitations = async (
+	candidateId: string,
+	candidateEmail: string,
+) => {
+	return prisma.invitation.findMany({
+		where: {
+			OR: [{ candidateId }, { candidateEmail }],
+		},
+		orderBy: { createdAt: "desc" },
+		select: {
+			id: true,
+			status: true,
+			expiresAt: true,
+			createdAt: true,
+			assessment: {
+				select: { id: true, title: true, durationMinutes: true, status: true },
+			},
+		},
+	});
+};
+
 const getInvitationPreview = async (token: string) => {
 	const invitation = await prisma.invitation.findUnique({
 		where: { token },
@@ -333,9 +354,70 @@ const acceptInvitation = async (
 	});
 };
 
+const resendInvitation = async (
+	assessmentId: string,
+	invitationId: string,
+	caller: ICallerInfo,
+) => {
+	const scopeCompanyId = resolveCompanyScope(caller);
+
+	const assessment = await prisma.assessment.findFirst({
+		where: {
+			id: assessmentId,
+			deletedAt: null,
+			...(scopeCompanyId && { companyId: scopeCompanyId }),
+		},
+	});
+
+	if (!assessment) {
+		throw createError(404, "Assessment not found");
+	}
+
+	const invitation = await prisma.invitation.findFirst({
+		where: { id: invitationId, assessmentId },
+	});
+
+	if (!invitation) {
+		throw createError(404, "Invitation not found");
+	}
+
+	if (invitation.status !== "PENDING") {
+		throw createError(
+			400,
+			`Cannot resend — this invitation is already ${invitation.status.toLowerCase()}`,
+		);
+	}
+
+	// Regenerate token + expiry rather than reusing the old one — invalidates
+	// any previously leaked/expired link instead of just extending its life.
+	const newToken = crypto.randomBytes(32).toString("hex");
+	const newExpiresAt = new Date();
+	newExpiresAt.setDate(
+		newExpiresAt.getDate() + config.candidate_invitation_expires_in_days,
+	);
+
+	const updated = await prisma.invitation.update({
+		where: { id: invitationId },
+		data: { token: newToken, expiresAt: newExpiresAt },
+	});
+
+	const acceptLink = `${config.app_url}/invitations/accept/${newToken}`;
+
+	await transporter.sendMail({
+		from: config.mail_from,
+		to: invitation.candidateEmail,
+		subject: `Reminder: You've been invited to take an assessment: ${assessment.title}`,
+		html: `<p>Reminder — you've been invited to take "<b>${assessment.title}</b>". Click <a href="${acceptLink}">here</a> to get started. This link expires in ${config.candidate_invitation_expires_in_days} days.</p>`,
+	});
+
+	return updated;
+};
+
 export const invitationService = {
 	createInvitation,
 	getAllInvitations,
+	getMyInvitations,
 	getInvitationPreview,
 	acceptInvitation,
+	resendInvitation,
 };

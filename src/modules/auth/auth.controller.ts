@@ -108,27 +108,32 @@ const googleLogin = catchAsync(async (req: Request, res: Response) => {
 });
 
 const refreshToken = catchAsync(async (req: Request, res: Response) => {
-	const token = req.cookies.refreshToken || req.body.refreshToken;
+	const incomingToken = req.cookies.refreshToken || req.body.refreshToken;
 
-	if (!token) {
-		throw createError(httpStatus.UNAUTHORIZED, "Refresh Token is Missing.");
+	if (!incomingToken) {
+		throw createError(401, "No refresh token provided");
 	}
 
-	const result = await authService.refreshToken(token);
-
+	const result = await authService.refreshToken(incomingToken);
 	const isProduction = config.node_env === "production";
 
+	res.cookie("refreshToken", result.refreshToken, {
+		secure: isProduction,
+		httpOnly: true,
+		sameSite: isProduction ? "none" : "lax",
+		maxAge: 1000 * 60 * 60 * 24 * 7,
+	});
 	res.cookie("accessToken", result.accessToken, {
 		secure: isProduction,
 		httpOnly: true,
 		sameSite: isProduction ? "none" : "lax",
-		maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
+		maxAge: 1000 * 60 * 60 * 24,
 	});
 
 	sendResponse(res, {
-		statusCode: 200,
+		statusCode: httpStatus.OK,
 		success: true,
-		message: "Access token refreshed successfully",
+		message: "Token refreshed successfully",
 		data: result,
 	});
 });
@@ -157,24 +162,15 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
 });
 
 const logout = catchAsync(async (req: Request, res: Response) => {
-	const isProduction = config.node_env === "production";
+	await authService.logoutUser(req.user!.userId);
 
-	res.clearCookie("accessToken", {
-		secure: isProduction,
-		httpOnly: true,
-		sameSite: isProduction ? "none" : "lax",
-	});
-
-	res.clearCookie("refreshToken", {
-		secure: isProduction,
-		httpOnly: true,
-		sameSite: isProduction ? "none" : "lax",
-	});
+	res.clearCookie("accessToken");
+	res.clearCookie("refreshToken");
 
 	sendResponse(res, {
-		statusCode: 200,
+		statusCode: httpStatus.OK,
 		success: true,
-		message: "User logged out successfully",
+		message: "Logged out successfully",
 		data: null,
 	});
 });

@@ -56,6 +56,14 @@ const createProblem = async (
 			},
 		});
 
+		await writeAuditLog({
+			actorId: caller.userId,
+			actorRole: caller.role,
+			action: "PROBLEM_CREATED",
+			entityType: "Problem",
+			entityId: problem.id,
+		});
+
 		return problem;
 	});
 };
@@ -218,6 +226,17 @@ const updateProblem = async (
 				mcqOptions: true,
 			},
 		});
+
+		await writeAuditLog(
+			{
+				actorId: caller.userId,
+				actorRole: caller.role,
+				action: "PROBLEM_UPDATED",
+				entityType: "Problem",
+				entityId: id,
+			},
+			tx,
+		);
 
 		return updatedProblem;
 	});

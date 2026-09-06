@@ -107,6 +107,14 @@ const updateCompany = async (
 		},
 	});
 
+	await writeAuditLog({
+		actorId: caller.userId,
+		actorRole: caller.role,
+		action: "COMPANY_UPDATED",
+		entityType: "Company",
+		entityId: caller.companyId!,
+	});
+
 	return updated;
 };
 
@@ -186,6 +194,15 @@ const inviteTeamMember = async (
 		to: payload.email,
 		subject: "You've been invited to join a team on DevBench",
 		html: `<p>You've been invited as a <b>${payload.role}</b>. Click <a href="${inviteLink}">here</a> to accept. This link expires in ${config.team_invitation_expires_in_days} days.</p>`,
+	});
+
+	await writeAuditLog({
+		actorId: caller.userId,
+		actorRole: caller.role,
+		action: "TEAM_MEMBER_INVITED",
+		entityType: "TeamInvitation",
+		entityId: invitation.id,
+		metadata: { email: payload.email, role: payload.role },
 	});
 
 	return invitation;

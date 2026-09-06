@@ -32,6 +32,14 @@ const createAssessment = async (
 		},
 	});
 
+	await writeAuditLog({
+		actorId: caller.userId,
+		actorRole: caller.role,
+		action: "ASSESSMENT_CREATED",
+		entityType: "Assessment",
+		entityId: assessment.id,
+	});
+
 	return assessment;
 };
 
@@ -176,6 +184,14 @@ const updateAssessment = async (
 		},
 	});
 
+	await writeAuditLog({
+		actorId: caller.userId,
+		actorRole: caller.role,
+		action: "ASSESSMENT_UPDATED",
+		entityType: "Assessment",
+		entityId: id,
+	});
+
 	return updated;
 };
 
@@ -282,6 +298,15 @@ const attachProblem = async (
 		},
 	});
 
+	await writeAuditLog({
+		actorId: caller.userId,
+		actorRole: caller.role,
+		action: "PROBLEM_ATTACHED_TO_ASSESSMENT",
+		entityType: "Assessment",
+		entityId: assessmentId,
+		metadata: { problemId: payload.problemId },
+	});
+
 	return link;
 };
 
@@ -323,6 +348,15 @@ const detachProblem = async (
 	}
 
 	await prisma.assessmentProblem.delete({ where: { id: link.id } });
+
+	await writeAuditLog({
+		actorId: caller.userId,
+		actorRole: caller.role,
+		action: "PROBLEM_DETACHED_FROM_ASSESSMENT",
+		entityType: "Assessment",
+		entityId: assessmentId,
+		metadata: { problemId },
+	});
 
 	return null;
 };
@@ -379,6 +413,63 @@ const publishAssessment = async (id: string, caller: ICallerInfo) => {
 	});
 };
 
+const getAssessmentResults = async (
+	assessmentId: string,
+	caller: ICallerInfo,
+) => {
+	const scopeCompanyId = resolveCompanyScope(caller);
+
+	const assessment = await prisma.assessment.findFirst({
+		where: {
+			id: assessmentId,
+			deletedAt: null,
+			...(scopeCompanyId && { companyId: scopeCompanyId }),
+		},
+	});
+
+	if (!assessment) {
+		throw createError(404, "Assessment not found");
+	}
+
+	const attempts = await prisma.attempt.findMany({
+		where: { assessmentId },
+		orderBy: { totalScore: "desc" },
+		select: {
+			id: true,
+			status: true,
+			totalScore: true,
+			startedAt: true,
+			candidate: { select: { id: true, name: true, email: true } },
+			submissions: {
+				select: {
+					problemId: true,
+					submissionResult: {
+						select: { score: true, maxScore: true, status: true },
+					},
+				},
+			},
+		},
+	});
+
+	return {
+		assessment: {
+			id: assessment.id,
+			title: assessment.title,
+			passingScore: assessment.passingScore,
+		},
+		results: attempts.map((a) => ({
+			attemptId: a.id,
+			candidate: a.candidate,
+			status: a.status,
+			totalScore: a.totalScore,
+			passed:
+				a.totalScore !== null ? a.totalScore >= assessment.passingScore : null,
+			startedAt: a.startedAt,
+			submissions: a.submissions,
+		})),
+	};
+};
+
 export const assessmentService = {
 	createAssessment,
 	getAllAssessments,
@@ -388,4 +479,5 @@ export const assessmentService = {
 	attachProblem,
 	detachProblem,
 	publishAssessment,
+	getAssessmentResults,
 };

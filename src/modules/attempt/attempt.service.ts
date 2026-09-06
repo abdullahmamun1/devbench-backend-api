@@ -59,6 +59,27 @@ const startAttempt = async (assessmentId: string, caller: ICallerInfo) => {
 	return attempt;
 };
 
+const getMyAttempts = async (candidateId: string) => {
+	return prisma.attempt.findMany({
+		where: { candidateId },
+		orderBy: { startedAt: "desc" },
+		select: {
+			id: true,
+			status: true,
+			startedAt: true,
+			expiresAt: true,
+			totalScore: true,
+			assessment: {
+				select: {
+					id: true,
+					title: true,
+					company: { select: { companyName: true } },
+				},
+			},
+		},
+	});
+};
+
 const getAttemptById = async (attemptId: string, caller: ICallerInfo) => {
 	const found = await prisma.attempt.findFirst({
 		where: { id: attemptId, candidateId: caller.userId },
@@ -226,6 +247,7 @@ const finalSubmit = async (attemptId: string, caller: ICallerInfo) => {
 
 export const attemptService = {
 	startAttempt,
+	getMyAttempts,
 	getAttemptById,
 	upsertSubmission,
 	finalSubmit,
