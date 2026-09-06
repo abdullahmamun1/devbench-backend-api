@@ -138,9 +138,55 @@ const suspendCandidate = async (candidateId: string, caller: ICallerInfo) => {
 	return updated;
 };
 
-const getAuditLogs = async (query: IAuditLogFilterQuery) => {};
+const getAuditLogs = async (query: IAuditLogFilterQuery) => {
+	const page = Number(query.page) || 1;
+	const limit = Number(query.limit) || 20;
+	const skip = (page - 1) * limit;
 
-const getPlatformStats = async () => {};
+	const where: Prisma.AuditLogWhereInput = {
+		...(query.entityType && { entityType: query.entityType }),
+		...(query.entityId && { entityId: query.entityId }),
+	};
+
+	const [total, data] = await Promise.all([
+		prisma.auditLog.count({ where }),
+		prisma.auditLog.findMany({
+			where,
+			skip,
+			take: limit,
+			orderBy: { createdAt: "desc" },
+			include: {
+				actor: {
+					select: { id: true, name: true, email: true, role: true },
+				},
+			},
+		}),
+	]);
+
+	return { meta: { page, limit, total }, data };
+};
+
+const getPlatformStats = async () => {
+	const [companyCount, candidateCount, attemptsRun, revenueResult] =
+		await Promise.all([
+			prisma.company.count({ where: { deletedAt: null } }),
+			prisma.user.count({
+				where: { role: "CANDIDATE", isDeleted: false },
+			}),
+			prisma.attempt.count({ where: { status: "SUBMITTED" } }),
+			prisma.payment.aggregate({
+				where: { status: "SUCCEEDED" },
+				_sum: { amount: true },
+			}),
+		]);
+
+	return {
+		companyCount,
+		candidateCount,
+		assessmentsRun: attemptsRun,
+		revenueInCents: revenueResult._sum.amount ?? 0,
+	};
+};
 
 const adjustCredits = async (
 	payload: ICreditAdjustPayload,

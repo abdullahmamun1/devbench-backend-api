@@ -2,7 +2,11 @@ import type { Request, Response } from "express";
 import httpStatus from "http-status";
 import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
-import type { ICallerInfo, IListQuery } from "./admin.interface";
+import type {
+	IAuditLogFilterQuery,
+	ICallerInfo,
+	IListQuery,
+} from "./admin.interface";
 import { adminService } from "./admin.service";
 
 const listCompanies = catchAsync(async (req: Request, res: Response) => {
@@ -63,9 +67,29 @@ const suspendCandidate = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
-const getAuditLogs = catchAsync(async (req: Request, res: Response) => {});
+const getAuditLogs = catchAsync(async (req: Request, res: Response) => {
+	const query = req.query as IAuditLogFilterQuery;
+	const { data, meta } = await adminService.getAuditLogs(query);
 
-const getPlatformStats = catchAsync(async (req: Request, res: Response) => {});
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Audit logs fetched successfully",
+		meta,
+		data,
+	});
+});
+
+const getPlatformStats = catchAsync(async (req: Request, res: Response) => {
+	const result = await adminService.getPlatformStats();
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Platform stats fetched successfully",
+		data: result,
+	});
+});
 
 const adjustCredits = catchAsync(async (req: Request, res: Response) => {});
 
