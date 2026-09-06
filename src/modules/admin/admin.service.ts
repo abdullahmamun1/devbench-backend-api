@@ -1,5 +1,7 @@
 import type { Prisma } from "../../../generated/prisma";
+import config from "../../config";
 import { prisma } from "../../lib/prisma";
+import { redis } from "../../lib/redis";
 import { writeAuditLog } from "../../utils/auditLog";
 import { createError } from "../../utils/createError";
 import type {
@@ -167,6 +169,16 @@ const getAuditLogs = async (query: IAuditLogFilterQuery) => {
 };
 
 const getPlatformStats = async () => {
+	const cached = await redis.get<{
+		companyCount: number;
+		candidateCount: number;
+		assessmentsRun: number;
+		revenueInCents: number;
+	}>(config.platform_stats_cache_key);
+
+	if (cached) {
+		return cached;
+	}
 	const [companyCount, candidateCount, attemptsRun, revenueResult] =
 		await Promise.all([
 			prisma.company.count({ where: { deletedAt: null } }),
@@ -180,12 +192,18 @@ const getPlatformStats = async () => {
 			}),
 		]);
 
-	return {
+	const stats = {
 		companyCount,
 		candidateCount,
 		assessmentsRun: attemptsRun,
 		revenueInCents: revenueResult._sum.amount ?? 0,
 	};
+
+	await redis.set(config.platform_stats_cache_key, stats, {
+		ex: Number(config.platform_stats_cache_ttl_seconds),
+	});
+
+	return stats;
 };
 
 const adjustCredits = async (
