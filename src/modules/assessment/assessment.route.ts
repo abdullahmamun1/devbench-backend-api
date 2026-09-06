@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { UserRole } from "../../../generated/prisma";
 import { auth } from "../../middleware/auth";
+import { rateLimiter } from "../../middleware/rateLimiter";
 import { validateRequest } from "../../middleware/validateRequest";
 import { attemptController } from "../attempt/attempt.controller";
 import { invitationController } from "../invitation/invitation.controller";
@@ -79,6 +80,7 @@ router.post(
 
 router.post(
 	"/:id/invitations/:invitationId/resend",
+	rateLimiter("auth"),
 	auth(UserRole.ADMIN, UserRole.ASSESSMENT_CREATOR, UserRole.COMPANY_OWNER),
 	invitationController.resendInvitation,
 );

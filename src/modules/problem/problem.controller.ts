@@ -27,7 +27,7 @@ const getAllProblems = catchAsync(async (req: Request, res: Response) => {
 		role: req.user!.role,
 		companyId: req.user!.companyId,
 	};
-	const query = (req.validatedQuery || req.query) as IProblemFilterQuery;
+	const query = req.query as IProblemFilterQuery;
 	const { data, meta } = await problemService.getAllProblems(query, caller);
 
 	sendResponse(res, {

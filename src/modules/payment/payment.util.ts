@@ -52,9 +52,7 @@ const handleSessionCompleted = async (session: Stripe.Checkout.Session) => {
 					"src/templates/payment-success.ejs",
 				);
 				const html = await ejs.renderFile(templatePath, {
-					companyName: (
-						await tx.company.findUnique({ where: { id: payment.companyId } })
-					)?.companyName,
+					companyName: company.companyName,
 					creditsPurchased: payment.creditsPurchased,
 					amountPaid: (payment.amount / 100).toFixed(2),
 				});

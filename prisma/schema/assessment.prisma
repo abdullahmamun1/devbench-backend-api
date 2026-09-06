@@ -13,6 +13,8 @@ model Assessment {
   assessmentProblems AssessmentProblem[]
   invitations        Invitation[]
   attempts           Attempt[]
+
+  @@index([companyId])
 }
 
 model AssessmentProblem {
