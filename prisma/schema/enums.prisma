@@ -45,7 +45,8 @@ enum CreditTransactionType {
   PURCHASE
   DEDUCTION
   REFUND
-}
+  ADJUSTMENT
+} 
 
 enum InvitationStatus {
   PENDING

@@ -8,6 +8,7 @@ import { invitationRoutes } from "../modules/invitation/invitation.route";
 import { paymentRoutes } from "../modules/payment/payment.route";
 import { problemRoutes } from "../modules/problem/problem.route";
 import { userRoutes } from "../modules/user/user.route";
+import { adminRoutes } from "../modules/admin/admin.route";
 
 const router = Router();
 
@@ -47,6 +48,10 @@ const moduleRoutes = [
 	{
 		path: "/payments",
 		route: paymentRoutes,
+	},
+	{
+		path: "/admin",
+		route: adminRoutes,
 	},
 ];
 

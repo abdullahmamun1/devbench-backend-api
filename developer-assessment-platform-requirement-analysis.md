@@ -89,6 +89,8 @@ Admin accounts are **not self-registerable** — seeded via migration/seed scrip
 
 ## 4. Database Entities & Relationships
 
+# ERD LINK: https://drawsql.app/teams/abdullah-mamun/diagrams/devbench
+
 ```
 Company ──1:N── User (role: COMPANY_OWNER | ASSESSMENT_CREATOR | EVALUATOR)
    │
