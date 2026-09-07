@@ -173,10 +173,6 @@ Wrap these in a single DB transaction each — they're exactly the "prevent race
 
 ## 8. Caching Strategy (Redis)
 
-- Cache a company's problem-bank listing (invalidate on create/update/delete).
-- Cache published assessment public metadata (title, duration) shown on the invite-landing page.
-- **Attempt timer as source of truth**: store `attempt:{id}:expiresAt` in Redis (or just trust the DB `expiresAt` column) and check it server-side on every submission — never trust the client's remaining-time display.
-- Rate-limit: login/register/forgot-password/reset-password attempts, invitation-sending, and submission endpoints (`@upstash/ratelimit`, Redis-backed store).
 - Cache admin/company dashboard aggregates with a short TTL (e.g., 5 min) since they're expensive `GROUP BY` queries.
 
 ---
