@@ -2,8 +2,6 @@
 
 A backend-only REST API for a hiring assessment platform: companies create coding/MCQ/written problems, bundle them into assessments, invite candidates, and review timed attempts — with credit-based billing via Stripe.
 
-Built for the B7A6 backend course assignment. No frontend; the API is exercised via Postman/Thunder Client.
-
 ## Tech Stack
 
 - **Runtime**: Node.js, TypeScript, Express 5
@@ -159,7 +157,6 @@ prisma/
 ## Known Gaps
 
 - No automated test suite — verified manually via the Postman collection.
-- `/assessments/:id/invitations/:invitationId/resend` is not currently rate-limited (can be resent at zero credit cost).
 
 ## Deployment
 
