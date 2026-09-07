@@ -51,18 +51,34 @@ const suspendCompany = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
-const suspendCandidate = catchAsync(async (req: Request, res: Response) => {
-	const candidateId = req.params.id as string;
+const suspendUser = catchAsync(async (req: Request, res: Response) => {
+	const userId = req.params.id as string;
 	const caller: ICallerInfo = {
 		userId: req.user!.userId,
 		role: req.user!.role,
 	};
-	const result = await adminService.suspendCandidate(candidateId, caller);
+	const result = await adminService.suspendUser(userId, caller);
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
 		success: true,
-		message: "Candidate suspended successfully",
+		message: "User suspended successfully",
+		data: result,
+	});
+});
+
+const deleteUser = catchAsync(async (req: Request, res: Response) => {
+	const userId = req.params.id as string;
+	const caller: ICallerInfo = {
+		userId: req.user!.userId,
+		role: req.user!.role,
+	};
+	const result = await adminService.deleteUser(userId, caller);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "User deleted successfully",
 		data: result,
 	});
 });
@@ -110,7 +126,8 @@ export const adminController = {
 	listCompanies,
 	listCandidates,
 	suspendCompany,
-	suspendCandidate,
+	suspendUser,
+	deleteUser,
 	getAuditLogs,
 	getPlatformStats,
 	adjustCredits,

@@ -172,9 +172,7 @@ const upsertSubmission = async (
 	if (attempt.status !== "IN_PROGRESS") {
 		throw createError(
 			400,
-			attempt.status === "SUBMITTED"
-				? "Your time expired and this attempt was automatically submitted"
-				: `This attempt is ${attempt.status.toLowerCase()} and cannot accept answers`,
+			"Your time expired and this attempt was automatically submitted",
 		);
 	}
 

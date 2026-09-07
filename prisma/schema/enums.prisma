@@ -63,15 +63,12 @@ enum TeamInvitationStatus {
 }
 
 enum AttemptStatus {
-  NOT_STARTED
   IN_PROGRESS
   SUBMITTED
-  EXPIRED
 }
 
 enum PaymentStatus {
   PENDING
   SUCCEEDED
   FAILED
-  REFUNDED
 }

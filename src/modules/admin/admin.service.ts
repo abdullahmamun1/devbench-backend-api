@@ -111,30 +111,69 @@ const suspendCompany = async (companyId: string, caller: ICallerInfo) => {
 	return updated;
 };
 
-const suspendCandidate = async (candidateId: string, caller: ICallerInfo) => {
-	const candidate = await prisma.user.findFirst({
-		where: { id: candidateId, role: "CANDIDATE", isDeleted: false },
-	});
-
-	if (!candidate) {
-		throw createError(404, "Candidate not found");
+const suspendUser = async (userId: string, caller: ICallerInfo) => {
+	if (userId === caller.userId) {
+		throw createError(400, "You cannot suspend your own account");
 	}
 
-	if (candidate.status === "SUSPENDED") {
-		throw createError(400, "This candidate is already suspended");
+	const user = await prisma.user.findFirst({
+		where: { id: userId, isDeleted: false },
+	});
+
+	if (!user) {
+		throw createError(404, "User not found");
+	}
+
+	if (user.status === "SUSPENDED") {
+		throw createError(400, "This user is already suspended");
 	}
 
 	const updated = await prisma.user.update({
-		where: { id: candidateId },
+		where: { id: userId },
 		data: { status: "SUSPENDED" },
 	});
 
 	await writeAuditLog({
 		actorId: caller.userId,
-		actorRole: caller.role as never,
-		action: "CANDIDATE_SUSPENDED",
+		actorRole: caller.role,
+		action: "USER_SUSPENDED",
 		entityType: "User",
-		entityId: candidateId,
+		entityId: userId,
+		metadata: { targetRole: user.role },
+	});
+
+	return updated;
+};
+
+const deleteUser = async (userId: string, caller: ICallerInfo) => {
+	if (userId === caller.userId) {
+		throw createError(400, "You cannot delete your own account");
+	}
+
+	const user = await prisma.user.findFirst({
+		where: { id: userId, isDeleted: false },
+	});
+
+	if (!user) {
+		throw createError(404, "User not found");
+	}
+
+	const updated = await prisma.user.update({
+		where: { id: userId },
+		data: {
+			isDeleted: true,
+			deletedAt: new Date(),
+			status: "DELETED",
+		},
+	});
+
+	await writeAuditLog({
+		actorId: caller.userId,
+		actorRole: caller.role,
+		action: "USER_DELETED",
+		entityType: "User",
+		entityId: userId,
+		metadata: { targetRole: user.role },
 	});
 
 	return updated;
@@ -266,7 +305,8 @@ export const adminService = {
 	listCompanies,
 	listCandidates,
 	suspendCompany,
-	suspendCandidate,
+	suspendUser,
+	deleteUser,
 	getAuditLogs,
 	getPlatformStats,
 	adjustCredits,

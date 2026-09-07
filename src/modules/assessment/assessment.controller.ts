@@ -160,6 +160,23 @@ const publishAssessment = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const closeAssessment = catchAsync(async (req: Request, res: Response) => {
+	const id = req.params.id as string;
+	const caller: ICallerInfo = {
+		userId: req.user!.userId,
+		role: req.user!.role,
+		companyId: req.user!.companyId,
+	};
+	const result = await assessmentService.closeAssessment(id, caller);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Assessment closed successfully",
+		data: result,
+	});
+});
+
 const getAssessmentResults = catchAsync(async (req: Request, res: Response) => {
 	const assessmentId = req.params.id as string;
 	const caller: ICallerInfo = {
@@ -189,5 +206,6 @@ export const assessmentController = {
 	attachProblem,
 	detachProblem,
 	publishAssessment,
+	closeAssessment,
 	getAssessmentResults,
 };

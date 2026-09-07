@@ -413,6 +413,44 @@ const publishAssessment = async (id: string, caller: ICallerInfo) => {
 	});
 };
 
+const closeAssessment = async (id: string, caller: ICallerInfo) => {
+	const scopeCompanyId = resolveCompanyScope(caller);
+
+	const assessment = await prisma.assessment.findFirst({
+		where: {
+			id,
+			deletedAt: null,
+			...(scopeCompanyId && { companyId: scopeCompanyId }),
+		},
+	});
+
+	if (!assessment) {
+		throw createError(404, "Assessment not found");
+	}
+
+	if (assessment.status !== "PUBLISHED") {
+		throw createError(
+			400,
+			`Only a published assessment can be closed (current status: ${assessment.status})`,
+		);
+	}
+
+	const updated = await prisma.assessment.update({
+		where: { id },
+		data: { status: "CLOSED" },
+	});
+
+	await writeAuditLog({
+		actorId: caller.userId,
+		actorRole: caller.role,
+		action: "ASSESSMENT_CLOSED",
+		entityType: "Assessment",
+		entityId: id,
+	});
+
+	return updated;
+};
+
 const getAssessmentResults = async (
 	assessmentId: string,
 	caller: ICallerInfo,
@@ -479,5 +517,6 @@ export const assessmentService = {
 	attachProblem,
 	detachProblem,
 	publishAssessment,
+	closeAssessment,
 	getAssessmentResults,
 };

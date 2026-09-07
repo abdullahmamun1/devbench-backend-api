@@ -119,6 +119,28 @@ const resendInvitation = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const revokeInvitation = catchAsync(async (req: Request, res: Response) => {
+	const assessmentId = req.params.id as string;
+	const invitationId = req.params.invitationId as string;
+	const caller: ICallerInfo = {
+		userId: req.user!.userId,
+		role: req.user!.role,
+		companyId: req.user!.companyId,
+	};
+	const result = await invitationService.revokeInvitation(
+		assessmentId,
+		invitationId,
+		caller,
+	);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Invitation revoked and credit refunded",
+		data: result,
+	});
+});
+
 export const invitationController = {
 	createInvitation,
 	getAllInvitations,
@@ -126,4 +148,5 @@ export const invitationController = {
 	getInvitationPreview,
 	acceptInvitation,
 	resendInvitation,
+	revokeInvitation,
 };

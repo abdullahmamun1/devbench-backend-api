@@ -22,4 +22,10 @@ router.post(
 	invitationController.acceptInvitation,
 );
 
+router.patch(
+	"/:id/invitations/:invitationId/revoke",
+	auth(UserRole.ADMIN, UserRole.COMPANY_OWNER, UserRole.ASSESSMENT_CREATOR),
+	invitationController.revokeInvitation,
+);
+
 export const invitationRoutes = router;

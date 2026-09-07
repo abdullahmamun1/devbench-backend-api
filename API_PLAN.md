@@ -1,8 +1,6 @@
 # API Plan — DevBench Platform
 
-**Total endpoints:** 32 (exceeds 20+ requirement)
-
-All routes versioned under `/api/v1/`
+**Total endpoints:** 58 (exceeds 20+ requirement)
 
 ---
 
@@ -14,34 +12,36 @@ Custom JWT auth (access + refresh tokens, delivered as httpOnly cookies and in t
 |---|---|---|---|
 | POST | `/auth/register` | Public | Creates the user immediately (`emailVerified: false`), creates the Company in the same transaction if `role: COMPANY_OWNER`, emails a 6-digit OTP. Returns `{ email, otpExpiresInSeconds }` — no tokens yet |
 | POST | `/auth/verify-email` | Public | Verifies the OTP, sets `emailVerified: true`, sends the welcome email, returns tokens |
-| POST | `/auth/login` | Public | Email/password login — rejects with `403` if `emailVerified` is still `false` |
-| POST | `/auth/google` | Public | Verifies a Google ID token server-side; logs in an existing user (linking `googleId` + auto-verifying if they registered by password first) or registers a new one (`role`/`companyName` optional in the payload) |
-| POST | `/auth/forgot-password` | Public | Emails a 6-digit OTP (5 min TTL) for a verified, non-Google account. Rejects unverified/suspended/deleted/Google-only accounts |
+| POST | `/auth/login` | Public | Email/password login — rejects with `403` if `emailVerified` is `false`, the account is `SUSPENDED`, or the account's company is `SUSPENDED` |
+| POST | `/auth/google` | Public | Verifies a Google ID token server-side; logs in an existing user (linking `googleId` + auto-verifying if they registered by password first) or registers a new one (`role`/`companyName` optional in the payload, only applied on first sign-in) |
+| POST | `/auth/forgot-password` | Public | Emails a 6-digit OTP (5 min TTL) for a verified, non-Google account |
 | POST | `/auth/reset-password` | Public | Verifies the OTP and sets a new password; sends a confirmation email |
-| POST | `/auth/refresh-token` | Public (valid refresh token required) | Issues a new access token |
-| POST | `/auth/logout` | Authenticated | Clears both auth cookies |
+| POST | `/auth/refresh-token` | Public (valid refresh token required) | Rotates the refresh token — issuing a new one invalidates the previous one immediately via a Redis-backed check, not just on natural expiry |
+| POST | `/auth/logout` | Authenticated | Revokes the stored refresh token server-side and clears both auth cookies |
 
-Registering with an email that already has an unverified account resends a fresh OTP and refreshes name/password rather than rejecting — role/company are locked in on first registration and can't be changed by a resend. Forgot/reset-password are rate-limited the same as register/login (`rateLimiter("auth")`) to prevent email-bombing another user's inbox.
-
----
-
-## User & Profile (3 endpoints)
-
-| Method | Route | Roles | Purpose |
-|---|---|---|---|
-| GET | `/users/me` | Authenticated | Get own profile |
-| PATCH | `/users/me` | Authenticated | Update own profile (name, headline) |
-| PATCH | `/users/me/resume` | CANDIDATE | Upload resume (multipart, Cloudinary) |
+Registering with an email that already has an unverified account resends a fresh OTP and refreshes name/password rather than rejecting. Forgot/reset-password and register/login are all rate-limited (`rateLimiter("auth")`, 10 req/min per IP) to prevent email-bombing.
 
 ---
 
-## Company Management (3 endpoints)
+## User & Profile (2 endpoints)
 
 | Method | Route | Roles | Purpose |
 |---|---|---|---|
-| POST | `/companies` | Authenticated | Register a new company (becomes COMPANY_OWNER) |
-| GET | `/companies/me` | COMPANY_OWNER, ASSESSMENT_CREATOR, EVALUATOR | Get own company details + credit balance |
-| POST | `/companies/team/invite` | COMPANY_OWNER | Invite team member (ASSESSMENT_CREATOR or EVALUATOR role) |
+| GET | `/users/me` | Authenticated | Own profile with nested `candidateProfile`/`company` |
+| PATCH | `/users/me` | Authenticated | Update `name`; upserts `candidateProfile` fields for `CANDIDATE` role only |
+
+---
+
+## Company Management (6 endpoints)
+
+| Method | Route | Roles | Purpose |
+|---|---|---|---|
+| POST | `/companies` | Authenticated, no existing company | Self-serve company creation, promotes caller to `COMPANY_OWNER` |
+| GET | `/companies/me` | COMPANY_OWNER, ASSESSMENT_CREATOR, EVALUATOR | Company profile + team member list |
+| PATCH | `/companies/me` | COMPANY_OWNER | Update company name |
+| GET | `/companies/credits` | COMPANY_OWNER | Credit balance + last 20 `CreditTransaction` rows |
+| POST | `/companies/team/invite` | COMPANY_OWNER | Invite an `ASSESSMENT_CREATOR`/`EVALUATOR` by email |
+| POST | `/companies/team/accept/:token` | Public (optional auth) | Accept for an existing logged-in user, or register-on-accept for a new one |
 
 ---
 
@@ -49,76 +49,104 @@ Registering with an email that already has an unverified account resends a fresh
 
 | Method | Route | Roles | Purpose |
 |---|---|---|---|
-| POST | `/problems` | COMPANY_OWNER, ASSESSMENT_CREATOR | Create problem (CODING/MCQ/WRITTEN + test cases/options) |
-| GET | `/problems` | COMPANY_OWNER, ASSESSMENT_CREATOR, EVALUATOR | List company problems (paginated, filterable by type, search by title) |
-| GET | `/problems/:id` | COMPANY_OWNER, ASSESSMENT_CREATOR, EVALUATOR | Get problem details |
-| PATCH | `/problems/:id` | COMPANY_OWNER, ASSESSMENT_CREATOR | Update problem |
-| DELETE | `/problems/:id` | COMPANY_OWNER, ASSESSMENT_CREATOR | Soft-delete problem |
+| POST | `/problems` | ADMIN, COMPANY_OWNER, ASSESSMENT_CREATOR | Create CODING/MCQ/WRITTEN problem with nested test cases/options |
+| GET | `/problems` | ADMIN, COMPANY_OWNER, ASSESSMENT_CREATOR, EVALUATOR | Paginated, filterable by `type`/`search` — company-scoped |
+| GET | `/problems/:id` | Same as above | Single problem detail |
+| PATCH | `/problems/:id` | ADMIN, COMPANY_OWNER, ASSESSMENT_CREATOR | Update; company-scoped (non-admin can't touch another company's problem) |
+| DELETE | `/problems/:id` | ADMIN, COMPANY_OWNER, ASSESSMENT_CREATOR | Soft delete; company-scoped |
+
+`CANDIDATE` cannot reach any Problem Bank route directly — candidates only ever see problems through an active `Attempt`, with answer keys and hidden test cases stripped.
 
 ---
 
-## Assessments (5 endpoints)
+## Assessments (10 endpoints)
 
 | Method | Route | Roles | Purpose |
 |---|---|---|---|
-| POST | `/assessments` | COMPANY_OWNER, ASSESSMENT_CREATOR | Create assessment (DRAFT) |
-| GET | `/assessments` | COMPANY_OWNER, ASSESSMENT_CREATOR, EVALUATOR | List company assessments (paginated, filterable by status) |
-| GET | `/assessments/:id` | COMPANY_OWNER, ASSESSMENT_CREATOR, EVALUATOR | Get assessment with attached problems |
-| PATCH | `/assessments/:id` | COMPANY_OWNER, ASSESSMENT_CREATOR | Update assessment (locked once attempts exist) |
-| POST | `/assessments/:id/publish` | COMPANY_OWNER, ASSESSMENT_CREATOR | Publish assessment (transaction: validate ≥1 problem) |
+| POST | `/assessments` | ADMIN, COMPANY_OWNER, ASSESSMENT_CREATOR | Create in `DRAFT` status |
+| GET | `/assessments` | + EVALUATOR | Paginated, filterable by `status` |
+| GET | `/assessments/:id` | + EVALUATOR | Detail with ordered `assessmentProblems` |
+| PATCH | `/assessments/:id` | ADMIN, COMPANY_OWNER, ASSESSMENT_CREATOR | Update — `durationMinutes` locked once any invitation exists |
+| DELETE | `/assessments/:id` | Same | Soft delete |
+| POST | `/assessments/:id/problems` | Same | Attach a problem with `order`/`points` — locked once any invitation exists |
+| DELETE | `/assessments/:id/problems/:problemId` | Same | Detach — same lock |
+| POST | `/assessments/:id/publish` | Same | `DRAFT` → `PUBLISHED`; rejects zero attached problems or re-publishing |
+| POST | `/assessments/:id/close` | Same | `PUBLISHED` → `CLOSED`; stops new invitations/attempts from starting, does not interrupt attempts already in progress |
+| GET | `/assessments/:id/results` | + EVALUATOR | Aggregate per-candidate results (`totalScore`, `passed`) across every attempt on this assessment; `passed` stays `null` while a candidate's score is still pending evaluation |
 
 ---
 
-## Invitations (2 endpoints)
+## Invitations (7 endpoints)
 
 | Method | Route | Roles | Purpose |
 |---|---|---|---|
-| POST | `/invitations` | COMPANY_OWNER, ASSESSMENT_CREATOR | Send candidate invitation (transaction: check/deduct credits) |
-| POST | `/invitations/accept/:token` | CANDIDATE | Accept invitation (public link with token) |
+| POST | `/assessments/:id/invitations` | ADMIN, COMPANY_OWNER, ASSESSMENT_CREATOR | Send — requires `PUBLISHED` assessment, atomically debits 1 credit |
+| GET | `/assessments/:id/invitations` | Same | List, filterable by `status` |
+| POST | `/assessments/:id/invitations/:invitationId/resend` | Same | Regenerates token + 7-day expiry, re-sends the email — only while still `PENDING` |
+| PATCH | `/assessments/:id/invitations/:invitationId/revoke` | Same | Cancels a still-`PENDING` invitation and refunds the spent credit |
+| GET | `/invitations/accept/:token` | Public | Preview assessment title/duration before accepting |
+| POST | `/invitations/accept/:token` | Public (optional auth) | Accept for an existing logged-in candidate, or register-on-accept for a new one |
+| GET | `/invitations/me` | CANDIDATE | List the caller's own invitations (matched by linked `candidateId` or their email) |
+
+Sending is a single race-safe transaction: atomic `updateMany` credit debit, `Invitation` creation, `CreditTransaction` write, then the email is sent *outside* the transaction so a slow/failed send never rolls back a successful debit.
 
 ---
 
-## Attempts & Submissions (4 endpoints)
+## Attempts & Submissions (5 endpoints)
 
 | Method | Route | Roles | Purpose |
 |---|---|---|---|
-| POST | `/attempts/:assessmentId/start` | CANDIDATE | Start attempt (creates Attempt, sets timer) |
-| GET | `/attempts/:id` | CANDIDATE (own only) | Get attempt with problems and remaining time |
-| POST | `/attempts/:id/submit` | CANDIDATE | Submit answers for one or all problems (transaction: create Submissions + compute SubmissionResults + update totalScore) |
-| GET | `/attempts/:id/result` | CANDIDATE (own only) | View result after company releases it |
+| POST | `/assessments/:id/attempts/start` | CANDIDATE | Starts or resumes; requires an `ACCEPTED` invitation; `expiresAt` computed server-side once |
+| GET | `/attempts/:id` | CANDIDATE (own attempt only) | Detail with problems (answer keys/hidden test cases stripped), remaining time, own submissions |
+| POST | `/attempts/:id/submissions` | Same | Per-problem answer upsert; payload shape validated and rejected if it doesn't match the problem's `type` |
+| POST | `/attempts/:id/submit` | Same | Final submit — grades every attached problem, auto-grades MCQ, flags CODING/WRITTEN with content as `PENDING_REVIEW` |
+| GET | `/attempts/me` | CANDIDATE | List the caller's own attempts across all assessments |
+
+Any attempt-touching request made after `expiresAt` has passed **auto-finalizes** the attempt with whatever was submitted, rather than rejecting and discarding it — the specific late action is still refused, nothing already answered is lost.
 
 ---
 
-## Evaluation (2 endpoints)
+## Evaluation (3 endpoints)
 
 | Method | Route | Roles | Purpose |
 |---|---|---|---|
-| GET | `/evaluations/pending` | COMPANY_OWNER, EVALUATOR | List PENDING_REVIEW submissions for company |
-| POST | `/evaluations/:submissionId/grade` | COMPANY_OWNER, EVALUATOR | Grade CODING submission (score, feedback) |
+| GET | `/evaluations/pending` | ADMIN, COMPANY_OWNER, ASSESSMENT_CREATOR, EVALUATOR | Paginated `PENDING_REVIEW` queue, company-scoped, oldest-first |
+| GET | `/evaluations/:id` | Same | Full detail for review — hidden test cases and `isCorrect` intentionally visible here |
+| PATCH | `/evaluations/:id` | Same | Sets `score`/`status`/`feedback`; grading is final, no re-grade; recomputes the parent attempt's `totalScore` |
 
 ---
 
 ## Payments (3 endpoints)
 
+Stripe Checkout, card-only. Company's `Payment` row created as `PENDING` before redirecting; the webhook is the sole source of truth for marking it `SUCCEEDED`.
+
 | Method | Route | Roles | Purpose |
 |---|---|---|---|
-| POST | `/payments/create-session` | COMPANY_OWNER | Create Stripe checkout session for credit purchase |
-| POST | `/payments/webhook` | Public (Stripe) | Stripe webhook (transaction: verify signature → mark succeeded → increment credits) |
-| GET | `/payments/history` | COMPANY_OWNER | List company payments |
+| POST | `/payments/create-session` | COMPANY_OWNER | Creates a Stripe Checkout session for a `credits` quantity at a server-computed unit price; reuses an existing open session instead of creating duplicates |
+| POST | `/payments/webhook` | Public (Stripe-signature verified, no JWT) | Handles `checkout.session.completed` (credits the company, race-safe via an atomic `updateMany` status guard) and `checkout.session.expired` (marks a still-`PENDING` payment `FAILED`) |
+| GET | `/payments/history` | COMPANY_OWNER | Paginated list of the caller's company's payments |
+
+A successful payment sends a confirmation email (best-effort, doesn't block the transaction if delivery fails) and writes an `AuditLog` entry attributed to the company's `COMPANY_OWNER`.
 
 ---
 
-## Admin (7 endpoints)
+## Admin (9 endpoints)
 
-| Method | Route | Roles | Purpose |
-|---|---|---|---|
-| GET | `/admin/companies` | ADMIN | List all companies (paginated, search) |
-| PATCH | `/admin/companies/:id/suspend` | ADMIN | Suspend company |
-| GET | `/admin/candidates` | ADMIN | List all candidates (paginated, search) |
-| PATCH | `/admin/candidates/:id/suspend` | ADMIN | Suspend candidate |
-| GET | `/admin/audit-logs` | ADMIN | View audit logs (filterable by entityType, entityId) |
-| GET | `/admin/stats` | ADMIN | Platform stats (companies, candidates, assessments run, revenue) |
-| POST | `/admin/credits/adjust` | ADMIN | Manually adjust company credit balance (writes AuditLog) |
+The one module with no company-scoping — `ADMIN` legitimately sees across the whole platform. Every route behind `auth("ADMIN")`.
+
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/admin/companies` | Paginated, searchable list of all companies |
+| PATCH | `/admin/companies/:id/suspend` | Sets `Company.status = SUSPENDED`, blocking login for every member going forward |
+| GET | `/admin/candidates` | Paginated, searchable list of all candidates |
+| PATCH | `/admin/candidates/:id/suspend` | Sets `User.status = SUSPENDED` |
+| PATCH | `/admin/users/:id/suspend` | Role-agnostic version — suspends any account type (`COMPANY_OWNER`, `ASSESSMENT_CREATOR`, `EVALUATOR`, `ADMIN`), not just candidates. Self-suspension blocked |
+| DELETE | `/admin/users/:id` | Soft delete (`isDeleted`, `deletedAt`, `status: DELETED`) for any account type. Self-deletion blocked |
+| GET | `/admin/audit-logs` | Filterable by `entityType`/`entityId`, paginated |
+| GET | `/admin/stats` | Company/candidate counts, assessments run, revenue — cached 5 minutes in Redis |
+| POST | `/admin/credits/adjust` | Signed `amount` (+/-) adjustment with a required `reason`; blocks a resulting negative balance; writes both a `CreditTransaction` (`type: ADJUSTMENT`) and an `AuditLog` entry |
+
+Suspension blocks login going forward but does not revoke already-issued access tokens — consistent with the app's stateless-JWT stance elsewhere (refresh tokens *are* revocable, per the Auth section above, but access tokens are short-lived and not individually tracked).
 
 ---
 
@@ -127,75 +155,36 @@ Registering with an email that already has an unverified account resends a fresh
 | Category | Count |
 |---|---|
 | Authentication | 8 |
-| User & Profile | 3 |
-| Company Management | 3 |
+| User & Profile | 2 |
+| Company Management | 6 |
 | Problem Bank | 5 |
-| Assessments | 5 |
-| Invitations | 2 |
-| Attempts & Submissions | 4 |
-| Evaluation | 2 |
+| Assessments | 10 |
+| Invitations | 7 |
+| Attempts & Submissions | 5 |
+| Evaluation | 3 |
 | Payments | 3 |
-| Admin | 7 |
-| **Total** | **32** |
+| Admin | 9 |
+| **Total** | **58** |
 
 ---
 
 ## Implementation Notes
 
-### Pagination
-- Use query params: `?page=1&limit=10`
-- Apply to: `/problems`, `/assessments`, `/admin/companies`, `/admin/candidates`, `/admin/audit-logs`
+**Authorization pattern**: every module-level `ICallerInfo` carries `role` (and `userId`, `companyId` where relevant). Non-`ADMIN` company-scoped reads/writes go through a shared `resolveCompanyScope`/`requireCompanyId` helper (`src/utils/scoping.ts`) rather than each module reinventing the check — this is what closed several cross-company IDOR issues found during review (Problem Bank writes, Assessment problem-attach) before they shipped.
 
-### Filtering
-- `/problems`: `?type=CODING`
-- `/assessments`: `?status=PUBLISHED`
-- `/admin/audit-logs`: `?entityType=User&entityId=xxx`
+**Audit logging**: a shared `writeAuditLog` helper (`src/utils/auditLog.ts`) wraps its own errors internally so a logging failure can never block or roll back the business action it's recording. Covered actions: `ASSESSMENT_PUBLISHED`/`CLOSED`, `ASSESSMENT_CREATED`/`UPDATED`, `PROBLEM_CREATED`/`UPDATED`/`DELETED`, `PROBLEM_ATTACHED_TO_ASSESSMENT`/`DETACHED`, `INVITATION_SENT`/`ACCEPTED`/`REVOKED` (both team and candidate), `COMPANY_CREATED`/`UPDATED`, `TEAM_MEMBER_INVITED`, `PASSWORD_RESET`, `ATTEMPT_SUBMITTED`/`AUTO_SUBMITTED_ON_EXPIRY`, `SUBMISSION_GRADED`, `PAYMENT_SUCCEEDED`, `COMPANY_SUSPENDED`, `CANDIDATE_SUSPENDED`, `USER_SUSPENDED`, `USER_DELETED`, `CREDIT_ADJUSTED`.
 
-### Search
-- `/problems`: `?search=algorithm` (searches `title` and `description`)
-- `/admin/companies`: `?search=acme`
-- `/admin/candidates`: `?search=john@example.com`
+**Rate limiting** (`@upstash/ratelimit`, Redis-backed):
+- `/auth/register`, `/auth/login`, `/auth/forgot-password`, `/auth/reset-password`: 10 requests/minute per IP.
+- No rate limiting currently on `/assessments/:id/invitations/:invitationId/resend` — a known gap (can be spammed at zero credit cost), flagged for a follow-up rather than blocking.
 
-### Soft Deletes
-- DELETE endpoints set `deletedAt`, never hard-delete
-- Queries filter `WHERE deletedAt IS NULL` by default
+**Caching** (Redis):
+- `GET /admin/stats`: 5-minute TTL.
 
-### Rate Limiting (via @upstash/ratelimit)
-- `/auth/register`, `/auth/login`, `/auth/forgot-password`, `/auth/reset-password`: 10 requests / minute per IP (`rateLimiter("auth")`)
-- `/invitations`: 10 requests / hour per company
-- `/attempts/:id/submit`: 30 requests / minute per attempt (prevent spam during timer)
-
-### Response Format
-All endpoints return:
-```json
-{
-  "success": true,
-  "statusCode": 200,
-  "message": "Operation successful",
-  "data": {},
-  "meta": { "page": 1, "limit": 10, "total": 42 }  // pagination only
-}
-```
-
-Errors:
-```json
-{
-  "success": false,
-  "statusCode": 400,
-  "name": "ValidationError",
-  "message": "Invalid request",
-  "errorDetails": [{"field": "email", "message": "Invalid email"}]
-}
-```
-
-### Authentication
-- Protected routes require `Authorization: Bearer <token>` header or `accessToken` cookie
-- Role enforcement via `auth(...roles)` middleware
-- Ownership checks (e.g., company A can't read company B's problems) in service layer
-
-### Edge Cases Covered
-- Expired invite token → `410 Gone`
-- Duplicate invite (same email + assessment) → `400 Bad Request` with "already invited" message
-- Submit after timer expires → `400 Bad Request` "attempt expired"
-- Edit assessment with active attempts → `400 Bad Request` "assessment locked"
-- Send invite with 0 credits → `400 Bad Request` "insufficient credits"
+**Schema decisions made during implementation**:
+- `Submission.selectedOptionId` — a proper FK to `McqOption`, added instead of overloading `answerText` for MCQ answers.
+- `Company.status` (`ACTIVE | SUSPENDED`) — added specifically to give Admin's suspend action something meaningful to write to.
+- `CreditTransactionType.ADJUSTMENT` — added so manual admin credit changes are distinguishable from real purchases/deductions/refunds in transaction history.
+- `@@index` added on `SubmissionResult.status` and `Assessment.companyId` — both are filtered on heavily (Evaluation's pending queue, every company-scoped Assessment read) and had no index through most of development; closed as part of the code review pass.
+- `AttemptStatus` simplified from 4 values to 2 (`IN_PROGRESS | SUBMITTED`) — `NOT_STARTED` and `EXPIRED` were audited and found completely unreachable (attempts are always created already `IN_PROGRESS`; expiry auto-submits rather than locking to a dead `EXPIRED` state) and removed rather than left as dead schema.
+**Known gaps, not silently missing**: no automated test suite exists.

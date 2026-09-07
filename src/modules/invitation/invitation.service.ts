@@ -413,6 +413,82 @@ const resendInvitation = async (
 	return updated;
 };
 
+const revokeInvitation = async (
+	assessmentId: string,
+	invitationId: string,
+	caller: ICallerInfo,
+) => {
+	const scopeCompanyId = resolveCompanyScope(caller);
+
+	return await prisma.$transaction(async (tx) => {
+		const assessment = await tx.assessment.findFirst({
+			where: {
+				id: assessmentId,
+				deletedAt: null,
+				...(scopeCompanyId && { companyId: scopeCompanyId }),
+			},
+		});
+
+		if (!assessment) {
+			throw createError(404, "Assessment not found");
+		}
+
+		const invitation = await tx.invitation.findFirst({
+			where: { id: invitationId, assessmentId },
+		});
+
+		if (!invitation) {
+			throw createError(404, "Invitation not found");
+		}
+
+		if (invitation.status !== "PENDING") {
+			throw createError(
+				400,
+				`Cannot revoke — this invitation is already ${invitation.status.toLowerCase()}`,
+			);
+		}
+
+		const updated = await tx.invitation.update({
+			where: { id: invitationId },
+			data: { status: "REVOKED" },
+		});
+
+		// Refund the credit — the company never got value from an invitation
+		// that was cancelled before the candidate could act on it.
+		const company = await tx.company.update({
+			where: { id: assessment.companyId },
+			data: { creditBalance: { increment: 1 } },
+		});
+
+		await tx.creditTransaction.create({
+			data: {
+				companyId: assessment.companyId,
+				type: "REFUND",
+				amount: 1,
+				balanceAfter: company.creditBalance,
+				referenceId: invitationId,
+			},
+		});
+
+		await writeAuditLog(
+			{
+				actorId: caller.userId,
+				actorRole: caller.role,
+				action: "INVITATION_REVOKED",
+				entityType: "Invitation",
+				entityId: invitationId,
+				metadata: {
+					candidateEmail: invitation.candidateEmail,
+					creditRefunded: true,
+				},
+			},
+			tx,
+		);
+
+		return updated;
+	});
+};
+
 export const invitationService = {
 	createInvitation,
 	getAllInvitations,
@@ -420,4 +496,5 @@ export const invitationService = {
 	getInvitationPreview,
 	acceptInvitation,
 	resendInvitation,
+	revokeInvitation,
 };

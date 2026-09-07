@@ -140,6 +140,22 @@
 		{
 			"key": "codingProblemId",
 			"value": ""
+		},
+		{
+			"key": "checkoutSessionId",
+			"value": ""
+		},
+		{
+			"key": "targetCompanyId",
+			"value": ""
+		},
+		{
+			"key": "targetCandidateId",
+			"value": ""
+		},
+		{
+			"key": "candidateInvitationId",
+			"value": ""
 		}
 	],
 	"item": [
@@ -967,6 +983,24 @@
 					}
 				},
 				{
+					"name": "Get Assessment Results - Company Owner",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyOwnerAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/results",
+							"host": ["{{baseUrl}}"],
+							"path": ["assessments", "{{assessmentId}}", "results"]
+						},
+						"description": "passed stays null (not false) for any candidate whose totalScore is still pending evaluation."
+					}
+				},
+				{
 					"name": "[Negative] Publish with zero problems -> expect 400",
 					"event": [
 						{
@@ -1115,6 +1149,23 @@
 			"name": "Invitation",
 			"item": [
 				{
+					"name": "Get My Invitations - Candidate",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/invitations/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["invitations", "me"]
+						}
+					}
+				},
+				{
 					"name": "Send Invitation - Assessment Creator",
 					"event": [
 						{
@@ -1165,6 +1216,30 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["assessments", "{{assessmentId}}", "invitations"]
 						}
+					}
+				},
+				{
+					"name": "Resend Invitation - Assessment Creator",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}/invitations/{{candidateInvitationId}}/resend",
+							"host": ["{{baseUrl}}"],
+							"path": [
+								"assessments",
+								"{{assessmentId}}",
+								"invitations",
+								"{{candidateInvitationId}}",
+								"resend"
+							]
+						},
+						"description": "Set candidateInvitationId from the 'Get All Invitations for Assessment' response. Regenerates the token/expiry \u2014 the old link stops working. Only allowed while the invitation is still PENDING."
 					}
 				},
 				{
@@ -1378,6 +1453,23 @@
 		{
 			"name": "Attempt",
 			"item": [
+				{
+					"name": "Get My Attempts - Candidate",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/attempts/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["attempts", "me"]
+						}
+					}
+				},
 				{
 					"name": "Start Attempt - Candidate",
 					"event": [
@@ -1956,6 +2048,387 @@
 							"raw": "{\n  \"name\": \"New Teammate\",\n  \"password\": \"password123\"\n}"
 						},
 						"description": "Registers + joins in one step for someone with no existing account. For an existing logged-in user accepting instead, send this with an Authorization header and an empty body."
+					}
+				}
+			]
+		},
+		{
+			"name": "Payment",
+			"item": [
+				{
+					"name": "Create Checkout Session - Company Owner",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const res = pm.response.json();",
+									"    const match = res?.data?.checkoutUrl?.match(/cs_[a-zA-Z0-9_]+/);",
+									"    if (match) pm.collectionVariables.set('checkoutSessionId', match[0]);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyOwnerAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payments/create-session",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments", "create-session"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"credits\": 5\n}"
+						},
+						"description": "Returns a real Stripe checkoutUrl. Postman can't complete a real card payment, so use Stripe test mode + a test card in a browser to actually trigger the webhook below."
+					}
+				},
+				{
+					"name": "[Negative] Create session as Assessment Creator -> expect 403",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payments/create-session",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments", "create-session"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"credits\": 5\n}"
+						}
+					}
+				},
+				{
+					"name": "Get Payment History - Company Owner",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyOwnerAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payments/history",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments", "history"]
+						}
+					}
+				},
+				{
+					"name": "[Negative] Webhook with invalid signature -> expect 400",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Stripe-Signature",
+								"value": "t=1234567890,v1=invalidsignature"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payments/webhook",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments", "webhook"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"checkout.session.completed\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"cs_fake\"\n    }\n  }\n}"
+						},
+						"description": "Confirms signature verification actually rejects a forged/unsigned payload. A real webhook test requires the Stripe CLI (`stripe listen --forward-to`) since Postman can't compute a valid Stripe signature."
+					}
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "List Companies - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const res = pm.response.json();",
+									"    if (res?.data?.length) pm.collectionVariables.set('targetCompanyId', res.data[0].id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/companies?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "companies"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "List Candidates - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const res = pm.response.json();",
+									"    if (res?.data?.length) pm.collectionVariables.set('targetCandidateId', res.data[0].id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/candidates",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "candidates"]
+						}
+					}
+				},
+				{
+					"name": "Suspend Company - Admin",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/companies/{{targetCompanyId}}/suspend",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "companies", "{{targetCompanyId}}", "suspend"]
+						},
+						"description": "After this, that company's COMPANY_OWNER should get a 403 on their next login attempt."
+					}
+				},
+				{
+					"name": "[Negative] Suspend already-suspended company -> expect 400",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/companies/{{targetCompanyId}}/suspend",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "companies", "{{targetCompanyId}}", "suspend"]
+						},
+						"description": "Run immediately after 'Suspend Company' above using the same targetCompanyId."
+					}
+				},
+				{
+					"name": "Suspend Candidate - Admin",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/candidates/{{targetCandidateId}}/suspend",
+							"host": ["{{baseUrl}}"],
+							"path": [
+								"admin",
+								"candidates",
+								"{{targetCandidateId}}",
+								"suspend"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Audit Logs - Admin",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/audit-logs?page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "audit-logs"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Audit Logs filtered by entity - Admin",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/audit-logs?entityType=Assessment",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "audit-logs"],
+							"query": [
+								{
+									"key": "entityType",
+									"value": "Assessment"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Platform Stats - Admin",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "stats"]
+						},
+						"description": "Cached for 5 minutes \u2014 re-running immediately after a change (e.g. a new company) won't reflect it until the cache expires."
+					}
+				},
+				{
+					"name": "Adjust Credits - Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/credits/adjust",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "credits", "adjust"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyId\": \"{{targetCompanyId}}\",\n  \"amount\": 10,\n  \"reason\": \"Manual grant for hackathon judging demo\"\n}"
+						}
+					}
+				},
+				{
+					"name": "[Negative] Adjust credits into negative balance -> expect 400",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/credits/adjust",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "credits", "adjust"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyId\": \"{{targetCompanyId}}\",\n  \"amount\": -999999,\n  \"reason\": \"Testing the negative-balance guard\"\n}"
+						}
+					}
+				},
+				{
+					"name": "[Negative] Company Owner access /admin -> expect 403",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyOwnerAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/companies",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "companies"]
+						}
 					}
 				}
 			]

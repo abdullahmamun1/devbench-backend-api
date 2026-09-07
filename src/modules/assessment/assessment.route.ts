@@ -72,6 +72,12 @@ router.post(
 );
 
 router.post(
+	"/:id/close",
+	auth(UserRole.ADMIN, UserRole.COMPANY_OWNER, UserRole.ASSESSMENT_CREATOR),
+	assessmentController.closeAssessment,
+);
+
+router.post(
 	"/:id/invitations",
 	auth(UserRole.ADMIN, UserRole.ASSESSMENT_CREATOR, UserRole.COMPANY_OWNER),
 	validateRequest(invitationValidation.createInvitationValidationSchema),

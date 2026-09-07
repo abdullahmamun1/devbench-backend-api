@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { auth } from "../../middleware/auth";
 import { rateLimiter } from "../../middleware/rateLimiter";
 import { validateRequest } from "../../middleware/validateRequest";
 import { authController } from "./auth.controller";
@@ -47,6 +48,6 @@ router.post(
 	authController.resetPassword,
 );
 
-router.post("/logout", authController.logout);
+router.post("/logout", auth(), authController.logout);
 
 export const authRoutes = router;

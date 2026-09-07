@@ -8,11 +8,11 @@ export default {
 	port: process.env.PORT || 5000,
 	database_url: process.env.DATABASE_URL!,
 	app_url: process.env.APP_URL!,
-	registration_otp_ttl_seconds: process.env.REGISTRATION_OTP_TTL_SECONDS!,
+	registration_otp_ttl_seconds: process.env.REGISTRATION_OTP_TTL_SECONDS || 300,
 	forgot_password_otp_ttl_seconds: process.env.FORGOT_PASSWORD_OTP_TTL_SECONDS!,
 	platform_stats_cache_key: process.env.PLATFORM_STATS_CACHE_KEY!,
 	platform_stats_cache_ttl_seconds:
-		process.env.PLATFORM_STATS_CACHE_TTL_SECONDS!,
+		process.env.PLATFORM_STATS_CACHE_TTL_SECONDS || 600,
 	refresh_token_ttl_seconds: process.env.REFRESH_TOKEN_TTL_SECONDS!,
 
 	credit_price_in_cents: Number(process.env.CREDIT_PRICE_IN_CENTS) || 100, // $1.00/credit default

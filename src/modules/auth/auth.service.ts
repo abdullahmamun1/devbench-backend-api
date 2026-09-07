@@ -117,6 +117,7 @@ const registerUser = async (payload: IRegisterPayload) => {
 	const html = await ejs.renderFile(templatePath, {
 		name: payload.name,
 		otp: otpValue,
+		otpExpiresInMinutes: config.registration_otp_ttl_seconds,
 	});
 
 	await transporter.sendMail({
@@ -245,6 +246,10 @@ const loginUser = async (payload: ILoginPayload) => {
 
 	if (user.status === "SUSPENDED") {
 		throw createError(403, "Your account has been suspended");
+	}
+
+	if (user.status === "DELETED") {
+		throw createError(403, "This account no longer exists");
 	}
 
 	if (user.company?.status === "SUSPENDED") {

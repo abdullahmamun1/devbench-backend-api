@@ -25,9 +25,9 @@ const createCheckoutSession = catchAsync(
 );
 
 const handleWebhook = catchAsync(async (req: Request, res: Response) => {
-	const signature = req.headers["stripe-signature"];
+	const signature = req.headers["stripe-signature"] as string;
 
-	if (!signature || typeof signature !== "string") {
+	if (!signature) {
 		throw createError(400, "Missing Stripe signature header");
 	}
 

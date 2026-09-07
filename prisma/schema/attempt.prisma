@@ -2,7 +2,7 @@ model Attempt {
   id           String        @id @default(uuid())
   assessmentId String
   candidateId  String
-  status       AttemptStatus @default(NOT_STARTED)
+  status       AttemptStatus @default(IN_PROGRESS)
   startedAt    DateTime?
   expiresAt    DateTime?
   totalScore   Int?
