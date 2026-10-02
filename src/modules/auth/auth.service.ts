@@ -445,6 +445,9 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
 	if (user.status === "DELETED") {
 		throw createError(403, "User is deleted");
 	}
+	if (user.company?.status === "SUSPENDED") {
+		throw createError(403, "Your company's account has been suspended");
+	}
 
 	const jwtPayload = {
 		id: user.id,

@@ -44,21 +44,17 @@ export const auth = (...requiredRoles: UserRole[]) => {
 			}
 			const { id } = verifiedToken.data as JwtPayload;
 			const user = await prisma.user.findUnique({
-				where: {
-					id,
-				},
+				where: { id },
+				include: { company: true },
 			});
 			if (!user) {
 				throw createError(404, "User not found");
 			}
-			if (user.status === "SUSPENDED") {
+			if (user.status === "SUSPENDED" || user.status === "DELETED") {
 				throw createError(403, "Your account is suspended");
 			}
-			if (requiredRoles.length && !requiredRoles.includes(user.role)) {
-				throw createError(
-					403,
-					"You do not have permission to access this resource",
-				);
+			if (user.company?.status === "SUSPENDED") {
+				throw createError(403, "Your company's account has been suspended");
 			}
 
 			req.user = {

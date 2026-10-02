@@ -83,16 +83,18 @@ const googleLogin = catchAsync(async (req: Request, res: Response) => {
 	const result = await authService.googleLogin(payload);
 	const { accessToken, refreshToken } = result;
 
+	const isProduction = config.node_env === "production";
+
 	res.cookie("accessToken", accessToken, {
+		secure: isProduction,
 		httpOnly: true,
-		secure: false,
-		sameSite: "none",
+		sameSite: isProduction ? "none" : "lax",
 		maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
 	});
 	res.cookie("refreshToken", refreshToken, {
+		secure: isProduction,
 		httpOnly: true,
-		secure: false,
-		sameSite: "none",
+		sameSite: isProduction ? "none" : "lax",
 		maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
 	});
 
