@@ -237,10 +237,20 @@ const acceptTeamInvitation = async (
 		let targetUserId = userId;
 
 		if (!targetUserId) {
-			if (!registerPayload) {
+			if (!registerPayload?.name || !registerPayload?.password) {
 				throw createError(
 					400,
 					"Name and password are required to accept this invitation",
+				);
+			}
+
+			const existingAccount = await tx.user.findUnique({
+				where: { email: invitation.email },
+			});
+			if (existingAccount) {
+				throw createError(
+					409,
+					"An account with this email already exists. Log in with it, then open this link again.",
 				);
 			}
 

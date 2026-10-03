@@ -43,6 +43,7 @@ router.post(
 router.post(
 	"/team/accept/:token",
 	optionalAuth(),
+	validateRequest(companyValidation.acceptTeamInvitationValidationSchema),
 	companyController.acceptTeamInvitation,
 );
 
