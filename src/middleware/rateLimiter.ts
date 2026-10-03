@@ -20,6 +20,13 @@ const authLimiter = new Ratelimit({
 	prefix: "@ratelimit/auth",
 });
 
+const contactLimiter = new Ratelimit({
+	redis,
+	limiter: Ratelimit.slidingWindow(5, "1 h"),
+	analytics: true,
+	prefix: "@ratelimit/contact",
+});
+
 const getClientIp = (req: Request): string => {
 	const forwarded = req.headers["x-forwarded-for"];
 	if (typeof forwarded === "string") {
@@ -28,8 +35,15 @@ const getClientIp = (req: Request): string => {
 	return req.ip || req.socket.remoteAddress || "127.0.0.1";
 };
 
-export const rateLimiter = (type: "standard" | "auth" = "standard") => {
-	const limiter = type === "auth" ? authLimiter : standardLimiter;
+export const rateLimiter = (
+	type: "standard" | "auth" | "contact" = "standard",
+) => {
+	const limiter =
+		type === "auth"
+			? authLimiter
+			: type === "contact"
+				? contactLimiter
+				: standardLimiter;
 
 	return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
 		// Skip rate limiting if redis is not configured (e.g. In test/mock environment)
