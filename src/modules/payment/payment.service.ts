@@ -28,7 +28,15 @@ const createCheckoutSession = async (
 			existingPending.stripeSessionId,
 		);
 		if (session.status === "open") {
-			return { checkoutUrl: session.url, payment: existingPending };
+			// Same amount: resume it. Different amount: close it and start fresh.
+			if (existingPending.creditsPurchased === payload.credits) {
+				return { checkoutUrl: session.url, payment: existingPending };
+			}
+			await stripe.checkout.sessions.expire(existingPending.stripeSessionId);
+			await prisma.payment.update({
+				where: { id: existingPending.id },
+				data: { status: "FAILED" },
+			});
 		}
 	}
 
