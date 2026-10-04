@@ -48,8 +48,8 @@ const createCheckoutSession = async (
 			},
 		],
 		metadata: { companyId: caller.companyId, credits: String(payload.credits) },
-		success_url: `${config.app_url}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-		cancel_url: `${config.app_url}/payment/cancel`,
+		success_url: `${config.app_url}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+		cancel_url: `${config.app_url}/billing/cancel`,
 	});
 
 	const payment = await prisma.payment.create({
