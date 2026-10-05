@@ -23,3 +23,11 @@ export interface ICallerInfo {
 	userId: string;
 	role: UserRole;
 }
+
+export interface IPlatformTrendPoint {
+	month: string; // "YYYY-MM", UTC
+	companies: number;
+	candidates: number;
+	attempts: number;
+	revenueInCents: number;
+}

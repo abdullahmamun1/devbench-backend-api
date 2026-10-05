@@ -4,11 +4,13 @@ import { prisma } from "../../lib/prisma";
 import { redis } from "../../lib/redis";
 import { writeAuditLog } from "../../utils/auditLog";
 import { createError } from "../../utils/createError";
+import { monthKey } from "../../utils/monthKey";
 import type {
 	IAuditLogFilterQuery,
 	ICallerInfo,
 	ICreditAdjustPayload,
 	IListQuery,
+	IPlatformTrendPoint,
 } from "./admin.interface";
 
 const listCompanies = async (query: IListQuery) => {
@@ -245,6 +247,83 @@ const getPlatformStats = async () => {
 	return stats;
 };
 
+const getPlatformTrends = async (): Promise<IPlatformTrendPoint[]> => {
+	const cacheKey = `${config.platform_stats_cache_key}:trends`;
+	const cached = await redis.get<IPlatformTrendPoint[]>(cacheKey);
+	if (cached) {
+		return cached;
+	}
+
+	const now = new Date();
+	const start = new Date(
+		Date.UTC(
+			now.getUTCFullYear(),
+			now.getUTCMonth() - (Number(config.trend_months) - 1),
+			1,
+		),
+	);
+
+	const [companies, candidates, attempts, payments] = await Promise.all([
+		prisma.company.findMany({
+			where: { deletedAt: null, createdAt: { gte: start } },
+			select: { createdAt: true },
+		}),
+		prisma.user.findMany({
+			where: { role: "CANDIDATE", isDeleted: false, createdAt: { gte: start } },
+			select: { createdAt: true },
+		}),
+		prisma.attempt.findMany({
+			where: { status: "SUBMITTED", createdAt: { gte: start } },
+			select: { createdAt: true },
+		}),
+		prisma.payment.findMany({
+			where: { status: "SUCCEEDED", createdAt: { gte: start } },
+			select: { createdAt: true, amount: true },
+		}),
+	]);
+
+	// One bucket per month, zero filled, so empty months still show on the chart.
+	const points = new Map<string, IPlatformTrendPoint>();
+	for (let i = 0; i < Number(config.trend_months); i++) {
+		const date = new Date(
+			Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + i, 1),
+		);
+		const key = monthKey(date);
+		points.set(key, {
+			month: key,
+			companies: 0,
+			candidates: 0,
+			attempts: 0,
+			revenueInCents: 0,
+		});
+	}
+
+	for (const row of companies) {
+		const point = points.get(monthKey(row.createdAt));
+		if (point) point.companies += 1;
+	}
+	for (const row of candidates) {
+		const point = points.get(monthKey(row.createdAt));
+		if (point) point.candidates += 1;
+	}
+	for (const row of attempts) {
+		const point = points.get(monthKey(row.createdAt));
+		if (point) point.attempts += 1;
+	}
+	for (const row of payments) {
+		const point = points.get(monthKey(row.createdAt));
+		if (point) point.revenueInCents += row.amount;
+	}
+
+	const trends = [...points.values()];
+
+	await redis.set(cacheKey, trends, {
+		ex: Number(config.platform_stats_cache_ttl_seconds),
+	});
+
+	return trends;
+};
+
 const adjustCredits = async (
 	payload: ICreditAdjustPayload,
 	caller: ICallerInfo,
@@ -309,5 +388,6 @@ export const adminService = {
 	deleteUser,
 	getAuditLogs,
 	getPlatformStats,
+	getPlatformTrends,
 	adjustCredits,
 };

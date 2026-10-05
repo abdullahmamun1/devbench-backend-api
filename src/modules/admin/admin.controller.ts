@@ -107,6 +107,17 @@ const getPlatformStats = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const getPlatformTrends = catchAsync(async (_req: Request, res: Response) => {
+	const result = await adminService.getPlatformTrends();
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Platform trends fetched successfully",
+		data: result,
+	});
+});
+
 const adjustCredits = catchAsync(async (req: Request, res: Response) => {
 	const caller: ICallerInfo = {
 		userId: req.user!.userId,
@@ -130,5 +141,6 @@ export const adminController = {
 	deleteUser,
 	getAuditLogs,
 	getPlatformStats,
+	getPlatformTrends,
 	adjustCredits,
 };

@@ -22,6 +22,11 @@ router.patch(
 router.delete("/users/:id", auth(UserRole.ADMIN), adminController.deleteUser);
 router.get("/audit-logs", auth(UserRole.ADMIN), adminController.getAuditLogs);
 router.get("/stats", auth(UserRole.ADMIN), adminController.getPlatformStats);
+router.get(
+	"/stats/trends",
+	auth(UserRole.ADMIN),
+	adminController.getPlatformTrends,
+);
 router.post(
 	"/credits/adjust",
 	auth(UserRole.ADMIN),
