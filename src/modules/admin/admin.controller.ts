@@ -67,6 +67,38 @@ const suspendUser = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const reactivateCompany = catchAsync(async (req: Request, res: Response) => {
+	const companyId = req.params.id as string;
+	const caller: ICallerInfo = {
+		userId: req.user!.userId,
+		role: req.user!.role,
+	};
+	const result = await adminService.reactivateCompany(companyId, caller);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Company reactivated successfully",
+		data: result,
+	});
+});
+
+const reactivateUser = catchAsync(async (req: Request, res: Response) => {
+	const userId = req.params.id as string;
+	const caller: ICallerInfo = {
+		userId: req.user!.userId,
+		role: req.user!.role,
+	};
+	const result = await adminService.reactivateUser(userId, caller);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "User reactivated successfully",
+		data: result,
+	});
+});
+
 const deleteUser = catchAsync(async (req: Request, res: Response) => {
 	const userId = req.params.id as string;
 	const caller: ICallerInfo = {
@@ -138,6 +170,8 @@ export const adminController = {
 	listCandidates,
 	suspendCompany,
 	suspendUser,
+	reactivateCompany,
+	reactivateUser,
 	deleteUser,
 	getAuditLogs,
 	getPlatformStats,

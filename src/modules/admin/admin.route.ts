@@ -19,6 +19,16 @@ router.patch(
 	auth(UserRole.ADMIN),
 	adminController.suspendUser,
 );
+router.patch(
+	"/companies/:id/reactivate",
+	auth(UserRole.ADMIN),
+	adminController.reactivateCompany,
+);
+router.patch(
+	"/users/:id/reactivate",
+	auth(UserRole.ADMIN),
+	adminController.reactivateUser,
+);
 router.delete("/users/:id", auth(UserRole.ADMIN), adminController.deleteUser);
 router.get("/audit-logs", auth(UserRole.ADMIN), adminController.getAuditLogs);
 router.get("/stats", auth(UserRole.ADMIN), adminController.getPlatformStats);

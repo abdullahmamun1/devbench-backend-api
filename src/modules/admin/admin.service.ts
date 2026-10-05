@@ -159,6 +159,66 @@ const suspendUser = async (userId: string, caller: ICallerInfo) => {
 	return updated;
 };
 
+const reactivateCompany = async (companyId: string, caller: ICallerInfo) => {
+	const company = await prisma.company.findFirst({
+		where: { id: companyId, deletedAt: null },
+	});
+
+	if (!company) {
+		throw createError(404, "Company not found");
+	}
+
+	if (company.status !== "SUSPENDED") {
+		throw createError(400, "This company is not suspended");
+	}
+
+	const updated = await prisma.company.update({
+		where: { id: companyId },
+		data: { status: "ACTIVE" },
+	});
+
+	await writeAuditLog({
+		actorId: caller.userId,
+		actorRole: caller.role,
+		action: "COMPANY_REACTIVATED",
+		entityType: "Company",
+		entityId: companyId,
+	});
+
+	return updated;
+};
+
+const reactivateUser = async (userId: string, caller: ICallerInfo) => {
+	const user = await prisma.user.findFirst({
+		where: { id: userId, isDeleted: false },
+	});
+
+	if (!user) {
+		throw createError(404, "User not found");
+	}
+
+	// Deleted accounts stay deleted. Only a suspension can be lifted.
+	if (user.status !== "SUSPENDED") {
+		throw createError(400, "This user is not suspended");
+	}
+
+	const updated = await prisma.user.update({
+		where: { id: userId },
+		data: { status: "ACTIVE" },
+	});
+
+	await writeAuditLog({
+		actorId: caller.userId,
+		actorRole: caller.role,
+		action: "USER_REACTIVATED",
+		entityType: "User",
+		entityId: userId,
+		metadata: { targetRole: user.role },
+	});
+
+	return updated;
+};
+
 const deleteUser = async (userId: string, caller: ICallerInfo) => {
 	if (userId === caller.userId) {
 		throw createError(400, "You cannot delete your own account");
@@ -394,6 +454,8 @@ export const adminService = {
 	listCandidates,
 	suspendCompany,
 	suspendUser,
+	reactivateCompany,
+	reactivateUser,
 	deleteUser,
 	getAuditLogs,
 	getPlatformStats,
