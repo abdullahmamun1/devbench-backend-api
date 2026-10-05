@@ -4,6 +4,7 @@ export interface IListQuery {
 	page?: string | number;
 	limit?: string | number;
 	search?: string;
+	status?: string;
 }
 
 export interface IAuditLogFilterQuery {

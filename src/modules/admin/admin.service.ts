@@ -18,8 +18,14 @@ const listCompanies = async (query: IListQuery) => {
 	const limit = Number(query.limit) || 10;
 	const skip = (page - 1) * limit;
 
+	const status =
+		query.status === "ACTIVE" || query.status === "SUSPENDED"
+			? query.status
+			: undefined;
+
 	const where: Prisma.CompanyWhereInput = {
 		deletedAt: null,
+		...(status && { status }),
 		...(query.search && {
 			companyName: { contains: query.search, mode: "insensitive" },
 		}),
@@ -51,9 +57,15 @@ const listCandidates = async (query: IListQuery) => {
 	const limit = Number(query.limit) || 10;
 	const skip = (page - 1) * limit;
 
+	const status =
+		query.status === "ACTIVE" || query.status === "SUSPENDED"
+			? query.status
+			: undefined;
+
 	const where: Prisma.UserWhereInput = {
 		role: "CANDIDATE",
 		isDeleted: false,
+		...(status && { status }),
 		...(query.search && {
 			OR: [
 				{ name: { contains: query.search, mode: "insensitive" } },
@@ -248,6 +260,7 @@ const getPlatformStats = async () => {
 };
 
 const getPlatformTrends = async (): Promise<IPlatformTrendPoint[]> => {
+	const months = Number(config.trend_months) || 6;
 	const cacheKey = `${config.platform_stats_cache_key}:trends`;
 	const cached = await redis.get<IPlatformTrendPoint[]>(cacheKey);
 	if (cached) {
@@ -256,11 +269,7 @@ const getPlatformTrends = async (): Promise<IPlatformTrendPoint[]> => {
 
 	const now = new Date();
 	const start = new Date(
-		Date.UTC(
-			now.getUTCFullYear(),
-			now.getUTCMonth() - (Number(config.trend_months) - 1),
-			1,
-		),
+		Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1), 1),
 	);
 
 	const [companies, candidates, attempts, payments] = await Promise.all([
@@ -284,7 +293,7 @@ const getPlatformTrends = async (): Promise<IPlatformTrendPoint[]> => {
 
 	// One bucket per month, zero filled, so empty months still show on the chart.
 	const points = new Map<string, IPlatformTrendPoint>();
-	for (let i = 0; i < Number(config.trend_months); i++) {
+	for (let i = 0; i < months; i++) {
 		const date = new Date(
 			Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + i, 1),
 		);
