@@ -20,6 +20,10 @@ export interface IAttachProblemPayload {
 	points: number;
 }
 
+export interface IAttachProblemsPayload {
+	problems: { problemId: string; points: number }[];
+}
+
 export interface IAssessmentFilterQuery {
 	status?: "DRAFT" | "PUBLISHED" | "CLOSED";
 	page?: string | number;

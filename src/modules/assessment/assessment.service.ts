@@ -6,6 +6,7 @@ import { resolveCompanyScope } from "../../utils/scoping";
 import type {
 	IAssessmentFilterQuery,
 	IAttachProblemPayload,
+	IAttachProblemsPayload,
 	ICallerInfo,
 	ICreateAssessmentPayload,
 	IUpdateAssessmentPayload,
@@ -310,6 +311,98 @@ const attachProblem = async (
 	return link;
 };
 
+const attachProblems = async (
+	assessmentId: string,
+	payload: IAttachProblemsPayload,
+	caller: ICallerInfo,
+) => {
+	const scopeCompanyId = resolveCompanyScope(caller);
+
+	const assessment = await prisma.assessment.findFirst({
+		where: {
+			id: assessmentId,
+			deletedAt: null,
+			...(scopeCompanyId && { companyId: scopeCompanyId }),
+		},
+		include: {
+			_count: { select: { invitations: true } },
+		},
+	});
+
+	if (!assessment) {
+		throw createError(404, "Assessment not found");
+	}
+
+	if (assessment._count.invitations > 0) {
+		throw createError(
+			400,
+			"Cannot modify problems after invitations have been sent",
+		);
+	}
+
+	const ids = payload.problems.map((p) => p.problemId);
+
+	// Every problem must exist and belong to the assessment's company
+	const found = await prisma.problem.findMany({
+		where: {
+			id: { in: ids },
+			deletedAt: null,
+			...(caller.role !== "ADMIN" && { companyId: assessment.companyId }),
+		},
+		select: { id: true },
+	});
+
+	if (found.length !== ids.length) {
+		throw createError(404, "One or more selected problems were not found");
+	}
+
+	const attached = await prisma.$transaction(async (tx) => {
+		const existing = await tx.assessmentProblem.findMany({
+			where: { assessmentId },
+			select: { problemId: true, order: true },
+		});
+
+		if (existing.some((link) => ids.includes(link.problemId))) {
+			throw createError(
+				400,
+				"Some of the selected problems are already attached to this assessment",
+			);
+		}
+
+		// New problems go after the existing ones, in the order they were sent
+		const startOrder =
+			existing.reduce((max, l) => Math.max(max, l.order), -1) + 1;
+
+		await tx.assessmentProblem.createMany({
+			data: payload.problems.map((p, index) => ({
+				assessmentId,
+				problemId: p.problemId,
+				order: startOrder + index,
+				points: p.points,
+			})),
+		});
+
+		return tx.assessmentProblem.findMany({
+			where: { assessmentId, problemId: { in: ids } },
+			orderBy: { order: "asc" },
+			include: {
+				problem: { select: { id: true, title: true, type: true } },
+			},
+		});
+	});
+
+	await writeAuditLog({
+		actorId: caller.userId,
+		actorRole: caller.role,
+		action: "PROBLEMS_ATTACHED_TO_ASSESSMENT",
+		entityType: "Assessment",
+		entityId: assessmentId,
+		metadata: { problemIds: ids },
+	});
+
+	return attached;
+};
+
 const detachProblem = async (
 	assessmentId: string,
 	problemId: string,
@@ -515,6 +608,7 @@ export const assessmentService = {
 	updateAssessment,
 	deleteAssessment,
 	attachProblem,
+	attachProblems,
 	detachProblem,
 	publishAssessment,
 	closeAssessment,

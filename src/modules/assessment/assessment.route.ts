@@ -59,6 +59,13 @@ router.post(
 	assessmentController.attachProblem,
 );
 
+router.post(
+	"/:id/problems/bulk",
+	auth(UserRole.ADMIN, UserRole.ASSESSMENT_CREATOR, UserRole.COMPANY_OWNER),
+	validateRequest(assessmentValidation.attachProblemsValidationSchema),
+	assessmentController.attachProblems,
+);
+
 router.delete(
 	"/:id/problems/:problemId",
 	auth(UserRole.ADMIN, UserRole.ASSESSMENT_CREATOR, UserRole.COMPANY_OWNER),

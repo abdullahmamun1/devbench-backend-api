@@ -15,6 +15,7 @@ router.post(
 );
 router.post(
 	"/verify-email",
+	rateLimiter("auth"),
 	validateRequest(authValidation.EmailVerificationZodSchema),
 	authController.verifyEmail,
 );

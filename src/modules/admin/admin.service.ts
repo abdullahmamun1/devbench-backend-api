@@ -116,7 +116,7 @@ const suspendCompany = async (companyId: string, caller: ICallerInfo) => {
 
 	await writeAuditLog({
 		actorId: caller.userId,
-		actorRole: caller.role as never,
+		actorRole: caller.role,
 		action: "COMPANY_SUSPENDED",
 		entityType: "Company",
 		entityId: companyId,
@@ -432,7 +432,7 @@ const adjustCredits = async (
 		await writeAuditLog(
 			{
 				actorId: caller.userId,
-				actorRole: caller.role as never,
+				actorRole: caller.role,
 				action: "CREDIT_ADJUSTED",
 				entityType: "Company",
 				entityId: payload.companyId,

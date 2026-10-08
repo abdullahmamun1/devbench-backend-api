@@ -2,11 +2,11 @@ import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import type { Prisma } from "../../../generated/prisma";
 import config from "../../config";
-import { transporter } from "../../lib/nodemailer";
 import { prisma } from "../../lib/prisma";
 import { writeAuditLog } from "../../utils/auditLog";
 import { createError } from "../../utils/createError";
 import { resolveCompanyScope } from "../../utils/scoping";
+import { trySendMail } from "../../utils/sendMailSafe";
 import type {
 	IAcceptInvitationPayload,
 	ICallerInfo,
@@ -124,18 +124,19 @@ const createInvitation = async (
 			};
 		});
 
-	// Email sent after the transaction commits — a slow/failed email shouldn't
-	// hold the DB transaction open or roll back a successful credit debit.
 	const acceptLink = `${config.app_url}/invitations/accept/${invitation.token}`;
 
-	await transporter.sendMail({
+	// The credit is already spent, so a mail failure must not fail the request.
+	// The caller can use "Resend" to try the email again at no cost.
+	const emailSent = await trySendMail({
 		from: config.mail_from,
 		to: candidateEmail,
 		subject: `You've been invited to take an assessment: ${assessmentTitle}`,
 		html: `<p>You've been invited to take the assessment "<b>${assessmentTitle}</b>". Click <a href="${acceptLink}">here</a> to get started. This invitation expires in ${config.candidate_invitation_expires_in_days} days.</p>`,
 	});
 
-	return invitation;
+	const { token: _token, ...safeInvitation } = invitation;
+	return { ...safeInvitation, emailSent };
 };
 
 const getAllInvitations = async (
@@ -403,14 +404,15 @@ const resendInvitation = async (
 
 	const acceptLink = `${config.app_url}/invitations/accept/${newToken}`;
 
-	await transporter.sendMail({
+	const emailSent = await trySendMail({
 		from: config.mail_from,
 		to: invitation.candidateEmail,
 		subject: `Reminder: You've been invited to take an assessment: ${assessment.title}`,
-		html: `<p>Reminder — you've been invited to take "<b>${assessment.title}</b>". Click <a href="${acceptLink}">here</a> to get started. This link expires in ${config.candidate_invitation_expires_in_days} days.</p>`,
+		html: `<p>Reminder: you've been invited to take "<b>${assessment.title}</b>". Click <a href="${acceptLink}">here</a> to get started. This link expires in ${config.candidate_invitation_expires_in_days} days.</p>`,
 	});
 
-	return updated;
+	const { token: _token, ...safeInvitation } = updated;
+	return { ...safeInvitation, emailSent };
 };
 
 const revokeInvitation = async (

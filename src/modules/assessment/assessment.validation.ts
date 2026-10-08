@@ -44,8 +44,25 @@ const attachProblemValidationSchema = z.object({
 	points: z.number().int().positive("Points must be a positive integer"),
 });
 
+const attachProblemsValidationSchema = z.object({
+	problems: z
+		.array(
+			z.object({
+				problemId: z.uuid("Invalid problem ID"),
+				points: z.number().int().positive("Points must be a positive integer"),
+			}),
+		)
+		.min(1, "Select at least one problem")
+		.max(50, "You can add up to 50 problems at once")
+		.refine(
+			(items) => new Set(items.map((i) => i.problemId)).size === items.length,
+			"The same problem was selected twice",
+		),
+});
+
 export const assessmentValidation = {
 	createAssessmentValidationSchema,
 	updateAssessmentValidationSchema,
 	attachProblemValidationSchema,
+	attachProblemsValidationSchema,
 };

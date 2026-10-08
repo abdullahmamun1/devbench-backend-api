@@ -92,7 +92,7 @@ Copy the `whsec_...` value it prints into `STRIPE_WEBHOOK_SECRET`. Test card: `4
 
 ## API overview
 
-61 endpoints in 11 modules. Details are in [`API_PLAN.md`](./API_PLAN.md) and the importable Postman collection [`DevBench-Backend.postman_collection.json`](./DevBench-Backend.postman_collection.json).
+62 endpoints in 11 modules. Details are in [`API_PLAN.md`](./API_PLAN.md) and the importable Postman collection [`DevBench-Backend.postman_collection.json`](./DevBench-Backend.postman_collection.json).
 
 | Module | Base path | Endpoints | Notes |
 |---|---|---|---|
@@ -100,7 +100,7 @@ Copy the `whsec_...` value it prints into `STRIPE_WEBHOOK_SECRET`. Test card: `4
 | Users | `/users` | 2 | `GET` and `PATCH /me` |
 | Companies | `/companies` | 6 | create, `/me`, credits, team invite, team accept |
 | Problems | `/problems` | 5 | CRUD for coding, MCQ and written problems |
-| Assessments | `/assessments` | 14 | CRUD, attach and detach problems, publish, close, invite, resend, list invitations, results, start attempt |
+| Assessments | `/assessments` | 15 | CRUD, attach and detach problems, publish, close, invite, resend, list invitations, results, start attempt |
 | Invitations | `/invitations` | 4 | my invitations, preview and accept by token, revoke |
 | Attempts | `/attempts` | 4 | my attempts, attempt detail, save answer, final submit |
 | Evaluations | `/evaluations` | 3 | pending queue, detail, grade |
@@ -165,7 +165,7 @@ prisma/
 ## Known gaps
 
 - No automated test suite. Behavior was checked by hand with the Postman collection and through the frontend.
-- Email delivery depends on your SMTP provider. If it is down, the related request returns an error.
+- If the mail server is down, candidate invitations are still created and the response reports `emailSent: false` so the invitation can be resent. Team invitations are rolled back and return an error.
 
 ## Deployment
 

@@ -123,6 +123,28 @@ const attachProblem = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const attachProblems = catchAsync(async (req: Request, res: Response) => {
+	const assessmentId = req.params.id as string;
+	const caller: ICallerInfo = {
+		userId: req.user!.userId,
+		role: req.user!.role,
+		companyId: req.user!.companyId,
+	};
+
+	const result = await assessmentService.attachProblems(
+		assessmentId,
+		req.body,
+		caller,
+	);
+
+	sendResponse(res, {
+		statusCode: httpStatus.CREATED,
+		success: true,
+		message: "Problems attached to assessment successfully",
+		data: result,
+	});
+});
+
 const detachProblem = catchAsync(async (req: Request, res: Response) => {
 	const assessmentId = req.params.id as string;
 	const problemId = req.params.problemId as string;
@@ -204,6 +226,7 @@ export const assessmentController = {
 	updateAssessment,
 	deleteAssessment,
 	attachProblem,
+	attachProblems,
 	detachProblem,
 	publishAssessment,
 	closeAssessment,

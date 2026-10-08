@@ -1,11 +1,11 @@
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import config from "../../config";
-import { transporter } from "../../lib/nodemailer";
 import { prisma } from "../../lib/prisma";
 import { writeAuditLog } from "../../utils/auditLog";
 import { createError } from "../../utils/createError";
 import { requireCompanyId } from "../../utils/scoping";
+import { trySendMail } from "../../utils/sendMailSafe";
 import type {
 	ICallerInfo,
 	ICreateCompanyPayload,
@@ -189,12 +189,22 @@ const inviteTeamMember = async (
 
 	const inviteLink = `${config.app_url}/team/accept/${token}`;
 
-	await transporter.sendMail({
+	const emailSent = await trySendMail({
 		from: config.mail_from,
 		to: payload.email,
 		subject: "You've been invited to join a team on DevBench",
 		html: `<p>You've been invited as a <b>${payload.role}</b>. Click <a href="${inviteLink}">here</a> to accept. This link expires in ${config.team_invitation_expires_in_days} days.</p>`,
 	});
+
+	if (!emailSent) {
+		// Nothing was charged, and there is no resend for team invites,
+		// so remove the record to let the owner simply try again.
+		await prisma.teamInvitation.delete({ where: { id: invitation.id } });
+		throw createError(
+			502,
+			"We could not send the invitation email. Please try again in a moment.",
+		);
+	}
 
 	await writeAuditLog({
 		actorId: caller.userId,
@@ -205,7 +215,8 @@ const inviteTeamMember = async (
 		metadata: { email: payload.email, role: payload.role },
 	});
 
-	return invitation;
+	const { token: _token, ...safeInvitation } = invitation;
+	return safeInvitation;
 };
 
 const acceptTeamInvitation = async (
