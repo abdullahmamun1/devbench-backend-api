@@ -150,6 +150,15 @@ export const seedCandidate = async () => {
 	}
 };
 
+const getOwnerCompanyId = async () => {
+	if (!config.company_owner_email) return null;
+	const owner = await prisma.user.findUnique({
+		where: { email: config.company_owner_email },
+		select: { companyId: true },
+	});
+	return owner?.companyId ?? null;
+};
+
 export const seedAssessmentCreator = async () => {
 	try {
 		const isCreatorExist = await prisma.user.findFirst({
@@ -171,10 +180,9 @@ export const seedAssessmentCreator = async () => {
 			return;
 		}
 
-		// Get first company to assign creator to
-		const company = await prisma.company.findFirst();
-		if (!company) {
-			console.log("⚠️  No company exists. Create Company Owner first.");
+		const companyId = await getOwnerCompanyId();
+		if (!companyId) {
+			console.log("⚠️  Company Owner has no company yet. Seed the owner first.");
 			return;
 		}
 
@@ -190,7 +198,7 @@ export const seedAssessmentCreator = async () => {
 				passwordHash: hashedPassword,
 				role: UserRole.ASSESSMENT_CREATOR,
 				status: "ACTIVE",
-				companyId: company.id,
+				companyId: companyId,
 				emailVerified: true,
 			},
 		});
@@ -222,10 +230,9 @@ export const seedEvaluator = async () => {
 			return;
 		}
 
-		// Get first company to assign evaluator to
-		const company = await prisma.company.findFirst();
-		if (!company) {
-			console.log("⚠️  No company exists. Create Company Owner first.");
+		const companyId = await getOwnerCompanyId();
+		if (!companyId) {
+			console.log("⚠️  Company Owner has no company yet. Seed the owner first.");
 			return;
 		}
 
@@ -241,7 +248,7 @@ export const seedEvaluator = async () => {
 				passwordHash: hashedPassword,
 				role: UserRole.EVALUATOR,
 				status: "ACTIVE",
-				companyId: company.id,
+				companyId: companyId,
 				emailVerified: true,
 			},
 		});

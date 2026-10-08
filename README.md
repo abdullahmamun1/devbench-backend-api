@@ -1,163 +1,172 @@
-# DevBench — Developer Assessment & Coding Platform
+# DevBench Backend
 
-A backend-only REST API for a hiring assessment platform: companies create coding/MCQ/written problems, bundle them into assessments, invite candidates, and review timed attempts — with credit-based billing via Stripe.
+REST API for DevBench, a developer assessment platform. Companies build coding, multiple-choice and written problems, bundle them into timed assessments, invite candidates by email and review the results. Invitations are paid with credits bought through Stripe Checkout.
 
-## Tech Stack
+The frontend lives in a separate repository (`devbench-frontend`).
 
-- **Runtime**: Node.js, TypeScript, Express 5
-- **Database**: PostgreSQL + Prisma ORM (7)
-- **Auth**: Custom JWT (access + refresh, httpOnly cookies) + Google Sign-In via `google-auth-library`
-- **Validation**: Zod
-- **Caching / Rate limiting**: Upstash Redis + `@upstash/ratelimit`
-- **Email**: Nodemailer + EJS templates
-- **File storage**: Multer + Cloudinary
-- **Payments**: Stripe Checkout
-- **Linting/formatting**: Biome
-- **Deployment**: Vercel
+## Tech stack
+
+| Area | Choice |
+|---|---|
+| Runtime | Node.js 20+, TypeScript, Express 5 |
+| Database | PostgreSQL with Prisma 7 (split schema in `prisma/schema/`) |
+| Auth | JWT access and refresh tokens in httpOnly cookies, Google Sign-In (`google-auth-library`) |
+| Validation | Zod |
+| Cache and rate limits | Upstash Redis, `@upstash/ratelimit` |
+| Email | Nodemailer with EJS templates |
+| Files | Multer and Cloudinary |
+| Payments | Stripe Checkout and webhook |
+| Tooling | Biome, tsup, tsx |
 
 ## Roles
 
-Five roles instead of a flat 3, to model a real hiring org:
-
-| Role | Scope |
+| Role | What they can do |
 |---|---|
-| `CANDIDATE` | Takes assessments via invitation |
-| `COMPANY_OWNER` | Owns a company, manages billing/team, full assessment control |
-| `ASSESSMENT_CREATOR` | Company team member — builds problems/assessments, sends invitations |
-| `EVALUATOR` | Company team member — reviews and scores pending submissions |
-| `ADMIN` | Platform-wide — no company scoping, manages companies/candidates/audit logs |
+| `CANDIDATE` | Accepts invitations and takes timed assessments |
+| `COMPANY_OWNER` | Owns a company. Billing, team, problems, assessments, invitations and reviews |
+| `ASSESSMENT_CREATOR` | Company team member. Builds problems and assessments, sends invitations, reviews |
+| `EVALUATOR` | Company team member. Reviews and scores submissions, can view problems and assessments |
+| `ADMIN` | Platform wide. Manages companies and candidates, reads audit logs, adjusts credits |
 
-## Getting Started
+## Getting started
 
 ### Prerequisites
-- Node.js 20+
-- PostgreSQL database (local or hosted, e.g. Neon/Supabase)
-- Upstash Redis instance
-- Stripe account (test mode is fine)
-- Google OAuth Client ID (for social login)
-- SMTP credentials (e.g. Mailtrap, Gmail app password) and a Cloudinary account
 
-### Installation
+- Node.js 20 or newer
+- A PostgreSQL database (local, Neon or Supabase)
+- An Upstash Redis instance
+- A Stripe account in test mode
+- A Google OAuth client ID (for Google sign-in)
+- SMTP credentials (Mailtrap or a Gmail app password) and a Cloudinary account
+
+### Install
 
 ```bash
 git clone <repo-url>
 cd DevBench-backend
-npm install
-```
-
-`npm install` runs `prisma generate` automatically via `postinstall`.
-
-### Environment variables
-
-Copy `.env.example` to `.env` and fill in the values:
-
-```bash
+npm install        # also runs `prisma generate`
 cp .env.example .env
 ```
 
-Key variables:
+Fill in `.env`. Every variable is explained in `.env.example`.
 
-- `DATABASE_URL` — PostgreSQL connection string
-- `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` / `JWT_ACCESS_EXPIRES_IN` / `JWT_REFRESH_EXPIRES_IN`
-- `BCRYPT_SALT_ROUNDS`
-- `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
-- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
-- `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `MAIL_FROM`
-- `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET`
-- `INVITATION_EXPIRES_IN_DAYS`
-- Seed credentials (`ADMIN_EMAIL`/`ADMIN_PASSWORD`, `COMPANY_OWNER_EMAIL`/..., `CANDIDATE_EMAIL`/..., `ASSESSMENT_CREATOR_EMAIL`/..., `EVALUATOR_EMAIL`/...) — one demo user per role
-
-### Database setup
+### Database
 
 ```bash
 npx prisma migrate dev
-npx tsx src/utils/seed.ts
 ```
-
-The seed script creates one demo account per role (credentials from the `.env` seed variables above), so every role can be demoed immediately after setup.
 
 ### Run
 
 ```bash
-npm run dev      # local dev server with hot reload (tsx watch)
-npm run build    # bundle with tsup
-npm run start    # run the built output (dist/server.js)
+npm run dev        # tsx watch with hot reload
+npm run build      # bundle with tsup
+npm run start      # run dist/server.js
 ```
 
-By default the server listens on `PORT` (5000) and mounts all routes under `/api/v1`.
+The API listens on `PORT` (default 5000) and mounts everything under `/api/v1`.
 
-### Linting
+### Demo accounts
+
+The server creates one account per role the first time it starts (`seedAllRoles` runs on every start and skips accounts that exist). Values come from the seed variables in `.env`.
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@devbench.com | Admin@123 |
+| Company owner | owner@acme.com | Owner@123 |
+| Assessment creator | creator@acme.com | Creator@123 |
+| Evaluator | evaluator@acme.com | Evaluator@123 |
+| Candidate | candidate@test.com | Candidate@123 |
+
+The creator and evaluator join the owner's company, and the company starts with 10 credits.
+
+### Stripe webhook (local)
+
+Credits are added only when Stripe's webhook confirms a payment.
 
 ```bash
-npm run lint
-npm run lint:fix
-npm run format
+stripe listen --forward-to localhost:5000/api/v1/payments/webhook
 ```
 
-## API Overview
+Copy the `whsec_...` value it prints into `STRIPE_WEBHOOK_SECRET`. Test card: `4242 4242 4242 4242`, any future date, any CVC.
 
-58 endpoints across 10 modules (full detail in [`API_PLAN.md`](./API_PLAN.md); importable Postman collection: [`DevBench-Backend.postman_collection.json`](./DevBench-Backend.postman_collection.json)).
+## API overview
 
-| Module | Base path | Endpoints |
-|---|---|---|
-| Auth | `/api/v1/auth` | 8 |
-| Users | `/api/v1/users` | 2 |
-| Companies | `/api/v1/companies` | 6 |
-| Problems | `/api/v1/problems` | 5 |
-| Assessments | `/api/v1/assessments` | 10 |
-| Invitations | `/api/v1/invitations` | 7 |
-| Attempts | `/api/v1/attempts` | 5 |
-| Evaluations | `/api/v1/evaluations` | 3 |
-| Payments | `/api/v1/payments` | 3 |
-| Admin | `/api/v1/admin` | 9 |
+61 endpoints in 11 modules. Details are in [`API_PLAN.md`](./API_PLAN.md) and the importable Postman collection [`DevBench-Backend.postman_collection.json`](./DevBench-Backend.postman_collection.json).
+
+| Module | Base path | Endpoints | Notes |
+|---|---|---|---|
+| Auth | `/auth` | 8 | register, verify-email, login, google, refresh-token, forgot-password, reset-password, logout |
+| Users | `/users` | 2 | `GET` and `PATCH /me` |
+| Companies | `/companies` | 6 | create, `/me`, credits, team invite, team accept |
+| Problems | `/problems` | 5 | CRUD for coding, MCQ and written problems |
+| Assessments | `/assessments` | 14 | CRUD, attach and detach problems, publish, close, invite, resend, list invitations, results, start attempt |
+| Invitations | `/invitations` | 4 | my invitations, preview and accept by token, revoke |
+| Attempts | `/attempts` | 4 | my attempts, attempt detail, save answer, final submit |
+| Evaluations | `/evaluations` | 3 | pending queue, detail, grade |
+| Payments | `/payments` | 3 | create checkout session, webhook, history |
+| Admin | `/admin` | 11 | companies, candidates, suspend and reactivate, delete user, audit logs, stats, trends, credit adjustment |
+| Contact | `/contact` | 1 | public contact form |
 
 ### Core flows
 
-- **Auth**: register → email OTP verification → login (JWT access + refresh, httpOnly cookies) or Google Sign-In; refresh-token rotation is Redis-backed to invalidate old tokens immediately.
-- **Company & billing**: a `COMPANY_OWNER` buys credits via Stripe Checkout; the webhook is the sole source of truth for confirming payment and crediting the company.
-- **Problem Bank**: company-scoped CODING/MCQ/WRITTEN problems; candidates never query this directly — they only see problems through an active attempt, with answer keys and hidden test cases stripped.
-- **Assessments**: `DRAFT` → `PUBLISHED` → `CLOSED` lifecycle; structural edits (duration, attached problems) lock once any invitation exists.
-- **Invitations**: sending debits one credit atomically in the same transaction as the invitation write; revoking a pending invitation refunds it.
-- **Attempts & submissions**: candidates start a timed attempt, submit per-problem answers, and finalize; requests made after expiry auto-finalize with whatever was submitted rather than being rejected outright.
-- **Evaluation**: MCQ auto-grades; CODING/WRITTEN submissions with content go to a `PENDING_REVIEW` queue for an `EVALUATOR`/creator to score (final, no re-grade).
-- **Admin**: platform-wide company/candidate/user management, audit log viewing, and manual credit adjustments — all logged.
+- **Auth.** Register, verify the emailed 6-digit code, then log in. Refresh tokens are rotated and stored in Redis, so an old token stops working immediately.
+- **Billing.** The owner buys credits through Stripe Checkout. The webhook is the only thing that credits the company.
+- **Problems.** Company-scoped. Candidates never read the problem bank. They see problems only inside an active attempt, with answer keys and hidden test cases removed.
+- **Assessments.** `DRAFT`, then `PUBLISHED`, then `CLOSED`. Duration and attached problems lock once any invitation exists.
+- **Invitations.** Sending one debits a credit in the same transaction as the invitation. Revoking a pending invitation refunds it.
+- **Attempts.** A candidate starts a timed attempt, saves answers per problem and submits. A request after the deadline finalizes the attempt with what was saved.
+- **Evaluation.** MCQ is graded automatically. Coding and written answers wait in a review queue until an evaluator scores them. A grade is final.
+- **Admin.** Suspend and reactivate companies and users, soft-delete users, adjust credits. Every action is audit logged.
 
 ### Cross-cutting behavior
 
-- **Company scoping**: a shared `resolveCompanyScope`/`requireCompanyId` helper (`src/utils/scoping.ts`) enforces that non-admin roles can only touch their own company's data.
-- **Audit logging**: a shared `writeAuditLog` helper (`src/utils/auditLog.ts`) records key actions (assessment/problem/invitation lifecycle, payments, suspensions, credit adjustments) without ever blocking the action it logs if logging itself fails.
-- **Rate limiting**: `/auth/register`, `/auth/login`, `/auth/forgot-password`, `/auth/reset-password` are limited to 10 requests/minute per IP (Redis-backed).
-- **Caching**: `GET /admin/stats` is cached for 5 minutes in Redis.
-- **Response format**: all responses go through a standardized JSON envelope (`src/utils/sendResponse.ts`), with centralized error handling (`src/middleware/globalErrorHandler.ts`).
+- **Company scoping.** `resolveCompanyScope` and `requireCompanyId` (`src/utils/scoping.ts`) keep non-admin roles inside their own company.
+- **Audit log.** `writeAuditLog` (`src/utils/auditLog.ts`) records key actions and never blocks the action if logging fails.
+- **Rate limiting** (Redis, per IP):
 
-## Project Structure
+  | Limiter | Limit | Applied to |
+  |---|---|---|
+  | `auth` | 10 per minute | register, login, forgot-password, reset-password, invitation resend |
+  | `contact` | 5 per hour | contact form |
+
+- **Caching.** `GET /admin/stats` and `/admin/stats/trends` are cached in Redis for `PLATFORM_STATS_CACHE_TTL_SECONDS`.
+- **Responses.** Every response uses the envelope `{ success, statusCode, message, data, meta? }` (`src/utils/sendResponse.ts`). Errors go through `src/middleware/globalErrorHandler.ts`.
+- **Cookies.** `httpOnly`. In production they are `secure` with `SameSite=None`, so the frontend must call the API over HTTPS.
+
+## Project structure
 
 ```
 src/
-├── app.ts                # Express app setup, middleware, route mounting
-├── server.ts              # Entry point
-├── config/                # Env config loader
-├── middleware/             # auth, validateRequest, error handling, notFound
-├── modules/
-│   ├── auth/               user/               company/
-│   ├── problem/             assessment/         invitation/
-│   ├── attempt/             evaluation/         payment/
-│   └── admin/
-│       each module: *.controller.ts, *.service.ts, *.route.ts,
-│                    *.validation.ts (Zod), *.interface.ts
-├── templates/              # EJS email templates (OTP, welcome, payment success...)
-└── utils/                 # jwt, session, scoping, auditLog, seed, sendResponse
-
+  app.ts            Express setup, middleware, route mounting
+  server.ts         Entry point, connects the database and seeds demo users
+  config/           Environment loader
+  lib/              prisma, redis, stripe, nodemailer, google auth
+  middleware/       auth, rateLimiter, validateRequest, notFound, globalErrorHandler
+  modules/          one folder per feature
+                    (controller, service, route, validation, interface)
+  templates/        EJS email templates
+  utils/            jwt, session, scoping, auditLog, seed, sendResponse
 prisma/
-└── schema/                 # split Prisma schema: user, company, problem,
-                             # assessment, attempt, audit, enums
+  schema/           user, company, problem, assessment, attempt, audit, enums
+  migrations/
 ```
 
-## Known Gaps
+## Scripts
 
-- No automated test suite — verified manually via the Postman collection.
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Development server with hot reload |
+| `npm run build` | Bundle to `dist/` |
+| `npm run start` | Run the bundle |
+| `npm run lint` and `npm run lint:fix` | Biome check |
+| `npm run format` | Biome format |
+
+## Known gaps
+
+- No automated test suite. Behavior was checked by hand with the Postman collection and through the frontend.
+- Email delivery depends on your SMTP provider. If it is down, the related request returns an error.
 
 ## Deployment
 
-Configured for Vercel (`vercel.json`). Set all environment variables from `.env.example` in the Vercel project settings, and point `STRIPE_WEBHOOK_SECRET` at a webhook endpoint registered for the deployed `/api/v1/payments/webhook` URL.
+Configured for Vercel (`vercel.json`). Set every variable from `.env.example` in the project settings, set `APP_URL` to the deployed frontend URL, and register `https://<api-host>/api/v1/payments/webhook` as a Stripe webhook endpoint.
