@@ -7,6 +7,13 @@ export interface IListQuery {
 	status?: string;
 }
 
+export interface IPaymentListQuery {
+	page?: string | number;
+	limit?: string | number;
+	search?: string;
+	status?: string;
+}
+
 export interface IAuditLogFilterQuery {
 	page?: string | number;
 	limit?: string | number;

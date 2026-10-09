@@ -15,7 +15,6 @@ export default {
 		process.env.PLATFORM_STATS_CACHE_TTL_SECONDS || 600,
 	refresh_token_ttl_seconds: process.env.REFRESH_TOKEN_TTL_SECONDS!,
 	trend_months: process.env.TREND_MONTHS!,
-
 	credit_price_in_cents: Number(process.env.CREDIT_PRICE_IN_CENTS) || 100, // $1.00/credit default
 	bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS!,
 	jwt_access_secret: process.env.JWT_ACCESS_SECRET!,

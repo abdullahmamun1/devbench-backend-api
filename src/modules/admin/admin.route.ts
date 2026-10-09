@@ -14,6 +14,8 @@ router.patch(
 	adminController.suspendCompany,
 );
 router.get("/candidates", auth(UserRole.ADMIN), adminController.listCandidates);
+router.get("/payments", auth(UserRole.ADMIN), adminController.listPayments);
+
 router.patch(
 	"/users/:id/suspend",
 	auth(UserRole.ADMIN),

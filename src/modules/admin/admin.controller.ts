@@ -6,6 +6,7 @@ import type {
 	IAuditLogFilterQuery,
 	ICallerInfo,
 	IListQuery,
+	IPaymentListQuery,
 } from "./admin.interface";
 import { adminService } from "./admin.service";
 
@@ -30,6 +31,19 @@ const listCandidates = catchAsync(async (req: Request, res: Response) => {
 		statusCode: httpStatus.OK,
 		success: true,
 		message: "Candidates fetched successfully",
+		meta,
+		data,
+	});
+});
+
+const listPayments = catchAsync(async (req: Request, res: Response) => {
+	const query = req.query as IPaymentListQuery;
+	const { data, meta } = await adminService.listPayments(query);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Payments fetched successfully",
 		meta,
 		data,
 	});
@@ -168,6 +182,7 @@ const adjustCredits = catchAsync(async (req: Request, res: Response) => {
 export const adminController = {
 	listCompanies,
 	listCandidates,
+	listPayments,
 	suspendCompany,
 	suspendUser,
 	reactivateCompany,

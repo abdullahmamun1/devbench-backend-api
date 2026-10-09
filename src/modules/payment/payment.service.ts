@@ -24,15 +24,31 @@ const createCheckoutSession = async (
 	});
 
 	if (existingPending) {
-		const session = await stripe.checkout.sessions.retrieve(
-			existingPending.stripeSessionId,
-		);
-		if (session.status === "open") {
-			// Same amount: resume it. Different amount: close it and start fresh.
+		let session: Stripe.Checkout.Session | null = null;
+		try {
+			session = await stripe.checkout.sessions.retrieve(
+				existingPending.stripeSessionId,
+			);
+		} catch {
+			// Session does not exist in Stripe (deleted, seeded, or wrong account).
+			session = null;
+		}
+
+		if (session?.status === "open" && session.url) {
 			if (existingPending.creditsPurchased === payload.credits) {
+				// Same amount: resume the open session.
 				return { checkoutUrl: session.url, payment: existingPending };
 			}
-			await stripe.checkout.sessions.expire(existingPending.stripeSessionId);
+			// Different amount: close it and start fresh.
+			try {
+				await stripe.checkout.sessions.expire(existingPending.stripeSessionId);
+			} catch {
+				// Already closed in the meantime. Safe to retire locally.
+			}
+		}
+
+		// A paid session is left for the webhook to finish, so skip it here.
+		if (session?.status !== "complete") {
 			await prisma.payment.update({
 				where: { id: existingPending.id },
 				data: { status: "FAILED" },
@@ -45,6 +61,7 @@ const createCheckoutSession = async (
 	const session = await stripe.checkout.sessions.create({
 		mode: "payment",
 		payment_method_types: ["card"],
+		customer_email: caller.email,
 		line_items: [
 			{
 				price_data: {

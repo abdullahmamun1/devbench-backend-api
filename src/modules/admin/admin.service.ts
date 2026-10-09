@@ -10,6 +10,7 @@ import type {
 	ICallerInfo,
 	ICreditAdjustPayload,
 	IListQuery,
+	IPaymentListQuery,
 	IPlatformTrendPoint,
 } from "./admin.interface";
 
@@ -89,6 +90,49 @@ const listCandidates = async (query: IListQuery) => {
 				emailVerified: true,
 				createdAt: true,
 				_count: { select: { attempts: true } },
+			},
+		}),
+	]);
+
+	return { meta: { page, limit, total }, data };
+};
+
+const listPayments = async (query: IPaymentListQuery) => {
+	const page = Number(query.page) || 1;
+	const limit = Number(query.limit) || 10;
+	const skip = (page - 1) * limit;
+
+	const status =
+		query.status === "PENDING" ||
+		query.status === "SUCCEEDED" ||
+		query.status === "FAILED"
+			? query.status
+			: undefined;
+
+	const where: Prisma.PaymentWhereInput = {
+		...(status && { status }),
+		...(query.search && {
+			company: {
+				companyName: { contains: query.search, mode: "insensitive" },
+			},
+		}),
+	};
+
+	const [total, data] = await Promise.all([
+		prisma.payment.count({ where }),
+		prisma.payment.findMany({
+			where,
+			skip,
+			take: limit,
+			orderBy: { createdAt: "desc" },
+			select: {
+				id: true,
+				amount: true,
+				status: true,
+				creditsPurchased: true,
+				stripeSessionId: true,
+				createdAt: true,
+				company: { select: { id: true, companyName: true } },
 			},
 		}),
 	]);
@@ -452,6 +496,7 @@ const adjustCredits = async (
 export const adminService = {
 	listCompanies,
 	listCandidates,
+	listPayments,
 	suspendCompany,
 	suspendUser,
 	reactivateCompany,

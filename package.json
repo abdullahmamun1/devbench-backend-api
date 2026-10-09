@@ -10,7 +10,9 @@
 		"lint": "biome check",
 		"lint:fix": "biome check --write",
 		"format": "biome format --write",
-		"postinstall": "prisma generate"
+		"postinstall": "prisma generate",
+		"seed:demo": "tsx src/utils/seedDemo.ts",
+		"seed:demo:reset": "tsx src/utils/seedDemo.ts --reset"
 	},
 	"keywords": [],
 	"author": "",

@@ -12,6 +12,7 @@ const createCheckoutSession = catchAsync(
 			userId: req.user!.userId,
 			role: req.user!.role,
 			companyId: req.user!.companyId,
+			email: req.user!.email,
 		};
 		const result = await paymentService.createCheckoutSession(req.body, caller);
 
@@ -49,6 +50,7 @@ const getPaymentHistory = catchAsync(async (req: Request, res: Response) => {
 		userId: req.user!.userId,
 		role: req.user!.role,
 		companyId: req.user!.companyId,
+		email: req.user!.email,
 	};
 	const query = req.query as IPaymentFilterQuery;
 	const { data, meta } = await paymentService.getPaymentHistory(query, caller);
