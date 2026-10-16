@@ -20,6 +20,13 @@ router.get(
 	companyController.getMyCompany,
 );
 
+// Dashboard charts
+router.get(
+	"/me/activity",
+	auth(UserRole.COMPANY_OWNER, UserRole.ASSESSMENT_CREATOR, UserRole.EVALUATOR),
+	companyController.getCompanyActivity,
+);
+
 router.patch(
 	"/me",
 	auth(UserRole.COMPANY_OWNER),

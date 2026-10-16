@@ -64,7 +64,7 @@ const startAttempt = async (assessmentId: string, caller: ICallerInfo) => {
 };
 
 const getMyAttempts = async (candidateId: string) => {
-	return prisma.attempt.findMany({
+	const attempts = await prisma.attempt.findMany({
 		where: { candidateId },
 		orderBy: { startedAt: "desc" },
 		select: {
@@ -77,10 +77,22 @@ const getMyAttempts = async (candidateId: string) => {
 				select: {
 					id: true,
 					title: true,
+					passingScore: true,
 					company: { select: { companyName: true } },
+					assessmentProblems: { select: { points: true } },
 				},
 			},
 		},
+	});
+
+	// Max score lets the candidate dashboard chart scores as percentages
+	return attempts.map(({ assessment, ...attempt }) => {
+		const { assessmentProblems, ...rest } = assessment;
+		return {
+			...attempt,
+			maxScore: assessmentProblems.reduce((sum, p) => sum + p.points, 0),
+			assessment: rest,
+		};
 	});
 };
 

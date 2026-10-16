@@ -4,6 +4,7 @@ import config from "../../config";
 import { prisma } from "../../lib/prisma";
 import { writeAuditLog } from "../../utils/auditLog";
 import { createError } from "../../utils/createError";
+import { monthKey } from "../../utils/monthKey";
 import { requireCompanyId } from "../../utils/scoping";
 import { trySendMail } from "../../utils/sendMailSafe";
 import type {
@@ -324,7 +325,99 @@ const acceptTeamInvitation = async (
 	});
 };
 
+const ACTIVITY_MONTHS = 6;
+
+// Company dashboard charts: invitations and submissions per month, how
+// finished attempts turned out, and the average score by problem type.
+const getCompanyActivity = async (caller: ICallerInfo) => {
+	const companyId = caller.companyId;
+	if (!companyId) {
+		throw createError(400, "You must belong to a company to view activity");
+	}
+
+	const now = new Date();
+	const start = new Date(
+		Date.UTC(
+			now.getUTCFullYear(),
+			now.getUTCMonth() - (ACTIVITY_MONTHS - 1),
+			1,
+		),
+	);
+	const inCompany = { assessment: { companyId } };
+
+	const [invitations, attempts, results] = await Promise.all([
+		prisma.invitation.findMany({
+			where: { ...inCompany, createdAt: { gte: start } },
+			select: { createdAt: true },
+		}),
+		prisma.attempt.findMany({
+			where: { ...inCompany, status: "SUBMITTED" },
+			select: {
+				startedAt: true,
+				updatedAt: true,
+				totalScore: true,
+				assessment: { select: { passingScore: true } },
+			},
+		}),
+		prisma.submissionResult.findMany({
+			where: {
+				status: { not: "PENDING_REVIEW" },
+				maxScore: { gt: 0 },
+				submission: { attempt: inCompany },
+			},
+			select: {
+				score: true,
+				maxScore: true,
+				submission: { select: { problem: { select: { type: true } } } },
+			},
+		}),
+	]);
+
+	// One bucket per month, zero filled, so quiet months still show
+	const months = new Map<
+		string,
+		{ month: string; invitations: number; submissions: number }
+	>();
+	for (let i = 0; i < ACTIVITY_MONTHS; i++) {
+		const key = monthKey(
+			new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + i, 1)),
+		);
+		months.set(key, { month: key, invitations: 0, submissions: 0 });
+	}
+	for (const row of invitations) {
+		const point = months.get(monthKey(row.createdAt));
+		if (point) point.invitations += 1;
+	}
+
+	const outcomes = { passed: 0, failed: 0, awaitingReview: 0 };
+	for (const attempt of attempts) {
+		// Expired attempts are finalized lazily, so updatedAt can be much later
+		// than when the candidate sat the test. startedAt is the honest month.
+		const point = months.get(monthKey(attempt.startedAt ?? attempt.updatedAt));
+		if (point) point.submissions += 1;
+		if (attempt.totalScore === null) outcomes.awaitingReview += 1;
+		else if (attempt.totalScore >= attempt.assessment.passingScore)
+			outcomes.passed += 1;
+		else outcomes.failed += 1;
+	}
+
+	const byType = (["CODING", "MCQ", "WRITTEN"] as const).map((type) => {
+		const ofType = results.filter((r) => r.submission.problem.type === type);
+		const share = ofType.reduce((sum, r) => sum + r.score / r.maxScore, 0);
+		return {
+			type,
+			graded: ofType.length,
+			averagePercent: ofType.length
+				? Math.round((share / ofType.length) * 100)
+				: null,
+		};
+	});
+
+	return { months: [...months.values()], outcomes, byType };
+};
+
 export const companyService = {
+	getCompanyActivity,
 	createCompany,
 	getMyCompany,
 	updateCompany,

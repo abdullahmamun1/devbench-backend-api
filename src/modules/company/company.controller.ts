@@ -36,6 +36,21 @@ const getMyCompany = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const getCompanyActivity = catchAsync(async (req: Request, res: Response) => {
+	const result = await companyService.getCompanyActivity({
+		userId: req.user!.userId,
+		role: req.user!.role,
+		companyId: req.user!.companyId,
+	});
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Company activity retrieved successfully",
+		data: result,
+	});
+});
+
 const updateCompany = catchAsync(async (req: Request, res: Response) => {
 	const caller = {
 		userId: req.user!.userId,
@@ -101,6 +116,7 @@ const acceptTeamInvitation = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const companyController = {
+	getCompanyActivity,
 	createCompany,
 	getMyCompany,
 	updateCompany,
