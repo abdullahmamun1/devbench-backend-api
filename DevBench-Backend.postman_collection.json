@@ -547,6 +547,28 @@
 							"path": ["auth", "logout"]
 						}
 					}
+				},
+				{
+					"name": "Resend Verification Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/resend-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "resend-otp"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test.candidate@example.com\"\n}"
+						},
+						"description": "Sends a new 6-digit code to an unverified account. 60 s cooldown per email; same response whether or not the email exists."
+					}
 				}
 			]
 		},
@@ -1632,6 +1654,31 @@
 						},
 						"description": "Uses a non-invited account to confirm the invitation-required gate. Swap the token for any account without an ACCEPTED invitation on this assessment."
 					}
+				},
+				{
+					"name": "Record Integrity Events - Candidate",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{candidateAccessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/attempts/{{attemptId}}/events",
+							"host": ["{{baseUrl}}"],
+							"path": ["attempts", "{{attemptId}}", "events"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"events\": [\n    {\n      \"type\": \"QUESTION_VIEWED\",\n      \"problemId\": \"{{problemId}}\",\n      \"occurredAt\": \"2026-10-16T10:00:00.000Z\"\n    },\n    {\n      \"type\": \"TAB_HIDDEN\",\n      \"occurredAt\": \"2026-10-16T10:01:00.000Z\"\n    },\n    {\n      \"type\": \"TAB_VISIBLE\",\n      \"occurredAt\": \"2026-10-16T10:01:30.000Z\"\n    },\n    {\n      \"type\": \"PASTE\",\n      \"problemId\": \"{{problemId}}\",\n      \"occurredAt\": \"2026-10-16T10:02:00.000Z\",\n      \"chars\": 420\n    }\n  ]\n}"
+						}
+					}
 				}
 			]
 		},
@@ -2428,6 +2475,101 @@
 							"raw": "{{baseUrl}}/admin/companies",
 							"host": ["{{baseUrl}}"],
 							"path": ["admin", "companies"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Insights",
+			"item": [
+				{
+					"name": "Get Attempt Signals - Evaluator",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/insights/attempts/{{attemptId}}/signals",
+							"host": ["{{baseUrl}}"],
+							"path": ["insights", "attempts", "{{attemptId}}", "signals"]
+						}
+					}
+				},
+				{
+					"name": "Get Submission Similarity - Evaluator",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/insights/submissions/{{submissionId}}/similarity",
+							"host": ["{{baseUrl}}"],
+							"path": [
+								"insights",
+								"submissions",
+								"{{submissionId}}",
+								"similarity"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Assessment Insights - Evaluator",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/insights/assessments/{{assessmentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["insights", "assessments", "{{assessmentId}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Attempt Insights - Evaluator",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{evaluatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/insights/attempts/{{attemptId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["insights", "attempts", "{{attemptId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Public",
+			"item": [
+				{
+					"name": "Get Public Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/public/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["public", "stats"]
 						}
 					}
 				}

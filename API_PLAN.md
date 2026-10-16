@@ -4,7 +4,7 @@
 
 ---
 
-## Authentication (8 endpoints)
+## Authentication (9 endpoints)
 
 Custom JWT auth (access + refresh tokens, delivered as httpOnly cookies and in the response body). No Better Auth — Google sign-in is verified directly via `google-auth-library` against the ID token the frontend obtains from Google, then bridged into the same JWT pair as every other login path.
 
@@ -12,6 +12,7 @@ Custom JWT auth (access + refresh tokens, delivered as httpOnly cookies and in t
 |---|---|---|---|
 | POST | `/auth/register` | Public | Creates the user immediately (`emailVerified: false`), creates the Company in the same transaction if `role: COMPANY_OWNER`, emails a 6-digit OTP. Returns `{ email, otpExpiresInSeconds }` — no tokens yet |
 | POST | `/auth/verify-email` | Public | Verifies the OTP, sets `emailVerified: true`, sends the welcome email, returns tokens |
+| POST | `/auth/resend-otp` | Public | Sends a fresh 6-digit verification code to an unverified account. 60-second cooldown per email on top of the auth rate limit; the response is identical whether or not the email exists, so it can't be used to discover accounts |
 | POST | `/auth/login` | Public | Email/password login — rejects with `403` if `emailVerified` is `false`, the account is `SUSPENDED`, or the account's company is `SUSPENDED` |
 | POST | `/auth/google` | Public | Verifies a Google ID token server-side; logs in an existing user (linking `googleId` + auto-verifying if they registered by password first) or registers a new one (`role`/`companyName` optional in the payload, only applied on first sign-in) |
 | POST | `/auth/forgot-password` | Public | Emails a 6-digit OTP (5 min TTL) for a verified, non-Google account |
@@ -92,7 +93,7 @@ Sending is a single race-safe transaction: atomic `updateMany` credit debit, `In
 
 ---
 
-## Attempts & Submissions (5 endpoints)
+## Attempts & Submissions (6 endpoints)
 
 | Method | Route | Roles | Purpose |
 |---|---|---|---|
@@ -101,8 +102,30 @@ Sending is a single race-safe transaction: atomic `updateMany` credit debit, `In
 | POST | `/attempts/:id/submissions` | Same | Per-problem answer upsert; payload shape validated and rejected if it doesn't match the problem's `type` |
 | POST | `/attempts/:id/submit` | Same | Final submit — grades every attached problem, auto-grades MCQ, flags CODING/WRITTEN with content as `PENDING_REVIEW` |
 | GET | `/attempts/me` | CANDIDATE | List the caller's own attempts across all assessments |
+| POST | `/attempts/:id/events` | CANDIDATE (own, in-progress attempt) | Batched exam-integrity events (`TAB_HIDDEN`, `TAB_VISIBLE`, `PASTE` with `chars`, `QUESTION_VIEWED`), max 50 per request and 2,000 per attempt. Timestamps are clamped to the attempt window; events over the cap or for problems outside the assessment are dropped, never rejected, so logging can't interrupt an exam. Returns `{ accepted, dropped }` |
 
 Any attempt-touching request made after `expiresAt` has passed **auto-finalizes** the attempt with whatever was submitted, rather than rejecting and discarding it — the specific late action is still refused, nothing already answered is lost.
+
+---
+
+## Insights (4 endpoints)
+
+Deterministic analysis, no LLM and no external service. Company-scoped like evaluations; admins see all companies.
+
+| Method | Route | Roles | Purpose |
+|---|---|---|---|
+| GET | `/insights/attempts/:id/signals` | ADMIN, COMPANY_OWNER, ASSESSMENT_CREATOR, EVALUATOR | Summarises an attempt's integrity events: tab switches, total and longest time away, paste count and size, and per-question paste counts and viewing time. `hasSignals: false` for attempts recorded before signal logging existed |
+| GET | `/insights/submissions/:id/similarity` | Same | Compares a CODING or WRITTEN answer with every other answer to the same problem in the company using winnowing (the MOSS technique). Names, formatting and comments are ignored; fingerprints shared by 3+ submissions (or 30% on large pools) are treated as common code. Returns the top 3 matches with score, level (`high` ≥ 70, `review` ≥ 40) and matching line ranges for both sides. MCQ returns `applicable: false`; answers under 25 code tokens or 15 words are `comparable: false`. Cached in Redis for 10 minutes |
+| GET | `/insights/assessments/:id` | Same | Ranking of fully graded attempts (ties share a rank, percentile = share of others beaten), 10-bucket score histogram, average and pass rate. With 5+ graded attempts, item analysis per question: difficulty (average share of points earned) and discrimination (top 27% minus bottom 27%), flagged when discrimination < 0.2 or difficulty is above 0.9 or below 0.2 |
+| GET | `/insights/attempts/:id` | Same | One attempt in context: rank and percentile, score by problem type (graded answers only), time per question from signals, and a plain-language summary built from fixed templates |
+
+---
+
+## Public (1 endpoint)
+
+| Method | Route | Roles | Purpose |
+|---|---|---|---|
+| GET | `/public/stats` | Public (standard rate limit) | Platform totals for the landing page: problems, published assessments, completed attempts, graded answers, active companies. Aggregate counts only, cached in Redis for `PLATFORM_STATS_CACHE_TTL_SECONDS` |
 
 ---
 
@@ -154,17 +177,19 @@ Suspension blocks login going forward but does not revoke already-issued access 
 
 | Category | Count |
 |---|---|
-| Authentication | 8 |
+| Authentication | 9 |
 | User & Profile | 2 |
 | Company Management | 6 |
 | Problem Bank | 5 |
 | Assessments | 10 |
 | Invitations | 7 |
-| Attempts & Submissions | 5 |
+| Attempts & Submissions | 6 |
 | Evaluation | 3 |
 | Payments | 3 |
 | Admin | 9 |
-| **Total** | **58** |
+| Insights | 4 |
+| Public | 1 |
+| **Total** | **65** |
 
 ---
 

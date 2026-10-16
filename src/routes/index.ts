@@ -4,12 +4,14 @@ import { assessmentRoutes } from "../modules/assessment/assessment.route";
 import { attemptRoutes } from "../modules/attempt/attempt.route";
 import { authRoutes } from "../modules/auth/auth.route";
 import { companyRoutes } from "../modules/company/company.route";
+import { contactRoutes } from "../modules/contact/contact.route";
 import { evaluationRoutes } from "../modules/evaluation/evaluation.route";
+import { insightsRoutes } from "../modules/insights/insights.route";
 import { invitationRoutes } from "../modules/invitation/invitation.route";
 import { paymentRoutes } from "../modules/payment/payment.route";
 import { problemRoutes } from "../modules/problem/problem.route";
+import { publicRoutes } from "../modules/public/public.route";
 import { userRoutes } from "../modules/user/user.route";
-import { contactRoutes } from "../modules/contact/contact.route";
 
 const router = Router();
 
@@ -57,6 +59,14 @@ const moduleRoutes = [
 	{
 		path: "/contact",
 		route: contactRoutes,
+	},
+	{
+		path: "/insights",
+		route: insightsRoutes,
+	},
+	{
+		path: "/public",
+		route: publicRoutes,
 	},
 ];
 
