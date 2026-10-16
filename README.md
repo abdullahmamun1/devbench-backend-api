@@ -161,7 +161,7 @@ Every response uses one envelope:
 
 ### Core flows
 
-- **Auth:** register, verify the email OTP, then log in. Tokens are httpOnly cookies. Refresh tokens rotate and are tracked in Redis, so an old token stops working at once.
+- **Auth:** register, verify the email OTP, then log in. Tokens are httpOnly cookies. Refresh tokens rotate and are tracked in Redis, so an old token stops working at once. Outside production the login, verify-email, Google and refresh responses also return the tokens in the body (for the Postman collection's per-role `Bearer` variables). In production they are cookie-only and `/auth/refresh-token` reads the refresh token from the cookie alone.
 - **Billing:** the owner buys credits through Stripe Checkout. The webhook is the only thing that confirms a payment and adds credits. A stale or missing pending checkout is retired automatically so the owner can always start a new one.
 - **Problems:** company-owned CODING, MCQ and WRITTEN problems. Candidates only see problems inside an active attempt, with answer keys and hidden test cases removed.
 - **Assessments:** `DRAFT`, `ACTIVE`, then `CLOSED`. Duration and attached problems lock once an invitation exists. Several problems can be attached at once with `POST /assessments/:id/problems/bulk`.

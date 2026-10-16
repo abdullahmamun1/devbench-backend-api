@@ -27,6 +27,13 @@ router.post(
 	authController.login,
 );
 
+router.post(
+	"/resend-otp",
+	rateLimiter("auth"),
+	validateRequest(authValidation.resendOtpValidationSchema),
+	authController.resendOtp,
+);
+
 router.post("/google", authController.googleLogin);
 
 router.post(

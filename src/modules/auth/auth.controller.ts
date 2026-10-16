@@ -1,6 +1,11 @@
 import type { Request, Response } from "express";
 import httpStatus from "http-status";
-import config from "../../config";
+import {
+	clearAuthCookies,
+	readRefreshToken,
+	setAuthCookies,
+	tokensForBody,
+} from "../../utils/authCookies";
 import { catchAsync } from "../../utils/catchAsync";
 import { createError } from "../../utils/createError";
 import { sendResponse } from "../../utils/sendResponse";
@@ -16,127 +21,74 @@ const register = catchAsync(async (req: Request, res: Response) => {
 		data: result,
 	});
 });
+const resendOtp = catchAsync(async (req: Request, res: Response) => {
+	const result = await authService.resendRegistrationOtp(req.body.email);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message:
+			"If this email has an unverified account, a new code is on its way",
+		data: result,
+	});
+});
+
 const verifyEmail = catchAsync(async (req: Request, res: Response) => {
 	const result = await authService.verifyEmail(req.body);
 
-	const isProduction = config.node_env === "production";
-
-	res.cookie("refreshToken", result.refreshToken, {
-		secure: isProduction,
-		httpOnly: true,
-		sameSite: isProduction ? "none" : "lax",
-		maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-	});
-
-	res.cookie("accessToken", result.accessToken, {
-		secure: isProduction,
-		httpOnly: true,
-		sameSite: isProduction ? "none" : "lax",
-		maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
-	});
+	setAuthCookies(res, result);
 
 	sendResponse(res, {
 		statusCode: httpStatus.CREATED,
 		success: true,
 		message: "User registered successfully",
-		data: {
-			user: result.user,
-			accessToken: result.accessToken,
-			refreshToken: result.refreshToken,
-		},
+		data: { user: result.user, ...tokensForBody(result) },
 	});
 });
 
 const login = catchAsync(async (req: Request, res: Response) => {
 	const result = await authService.loginUser(req.body);
 
-	const isProduction = config.node_env === "production";
-
-	res.cookie("refreshToken", result.refreshToken, {
-		secure: isProduction,
-		httpOnly: true,
-		sameSite: isProduction ? "none" : "lax",
-		maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-	});
-
-	res.cookie("accessToken", result.accessToken, {
-		secure: isProduction,
-		httpOnly: true,
-		sameSite: isProduction ? "none" : "lax",
-		maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
-	});
+	setAuthCookies(res, result);
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
 		success: true,
 		message: "User logged in successfully",
-		data: {
-			user: result.user,
-			accessToken: result.accessToken,
-			refreshToken: result.refreshToken,
-		},
+		data: { user: result.user, ...tokensForBody(result) },
 	});
 });
 
 const googleLogin = catchAsync(async (req: Request, res: Response) => {
 	const payload = req.body;
 	const result = await authService.googleLogin(payload);
-	const { accessToken, refreshToken } = result;
 
-	const isProduction = config.node_env === "production";
-
-	res.cookie("accessToken", accessToken, {
-		secure: isProduction,
-		httpOnly: true,
-		sameSite: isProduction ? "none" : "lax",
-		maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
-	});
-	res.cookie("refreshToken", refreshToken, {
-		secure: isProduction,
-		httpOnly: true,
-		sameSite: isProduction ? "none" : "lax",
-		maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-	});
+	setAuthCookies(res, result);
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
 		success: true,
 		message: "User logged in successfully",
-		data: {
-			accessToken,
-			refreshToken,
-		},
+		data: { isNewUser: result.isNewUser, ...tokensForBody(result) },
 	});
 });
 
 const refreshToken = catchAsync(async (req: Request, res: Response) => {
-	const incomingToken = req.cookies.refreshToken || req.body.refreshToken;
+	const incomingToken = readRefreshToken(req.cookies, req.body);
 
 	if (!incomingToken) {
 		throw createError(401, "No refresh token provided");
 	}
 
 	const result = await authService.refreshToken(incomingToken);
-	const isProduction = config.node_env === "production";
 
-	res.cookie("refreshToken", result.refreshToken, {
-		secure: isProduction,
-		httpOnly: true,
-		sameSite: isProduction ? "none" : "lax",
-		maxAge: 1000 * 60 * 60 * 24 * 7,
-	});
-	res.cookie("accessToken", result.accessToken, {
-		secure: isProduction,
-		httpOnly: true,
-		sameSite: isProduction ? "none" : "lax",
-		maxAge: 1000 * 60 * 60 * 24,
-	});
+	setAuthCookies(res, result);
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
 		success: true,
 		message: "Token refreshed successfully",
-		data: result,
+		data: tokensForBody(result),
 	});
 });
 
@@ -166,8 +118,7 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
 const logout = catchAsync(async (req: Request, res: Response) => {
 	await authService.logoutUser(req.user!.userId);
 
-	res.clearCookie("accessToken");
-	res.clearCookie("refreshToken");
+	clearAuthCookies(res);
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
@@ -179,6 +130,7 @@ const logout = catchAsync(async (req: Request, res: Response) => {
 
 export const authController = {
 	register,
+	resendOtp,
 	login,
 	verifyEmail,
 	googleLogin,

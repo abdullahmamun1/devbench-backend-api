@@ -29,6 +29,59 @@ import type {
 
 type UserWithCompany = Prisma.UserGetPayload<{ include: { company: true } }>;
 
+// Creates a fresh 6-digit code (replacing any previous one) and emails it.
+const sendRegistrationOtp = async (email: string, name: string) => {
+	const ttlSeconds = Number(config.registration_otp_ttl_seconds);
+	const otpValue = crypto.randomInt(100000, 1000000).toString();
+	await redis.set(`register-otp:${email}`, otpValue, { ex: ttlSeconds });
+
+	const templatePath = path.join(
+		process.cwd(),
+		"src/templates/registration-otp.ejs",
+	);
+	const html = await ejs.renderFile(templatePath, {
+		name,
+		otp: otpValue,
+		otpExpiresInMinutes: Math.max(1, Math.round(ttlSeconds / 60)),
+	});
+
+	await transporter.sendMail({
+		from: config.mail_from,
+		to: email,
+		subject: "Verify your DevBench account",
+		html,
+	});
+};
+
+const RESEND_COOLDOWN_SECONDS = 60;
+
+// Sends a new verification code to an unverified account. The response is the
+// same whether or not the email is registered, so it can't be used to find accounts.
+const resendRegistrationOtp = async (email: string) => {
+	const cooldownKey = `register-otp-cooldown:${email}`;
+	const fresh = await redis.set(cooldownKey, "1", {
+		nx: true,
+		ex: RESEND_COOLDOWN_SECONDS,
+	});
+	if (fresh === null) {
+		const wait = await redis.ttl(cooldownKey);
+		throw createError(
+			429,
+			`Please wait ${wait > 0 ? wait : RESEND_COOLDOWN_SECONDS} seconds before requesting another code`,
+		);
+	}
+
+	const user = await prisma.user.findUnique({ where: { email } });
+	if (user && !user.emailVerified && user.status === "ACTIVE") {
+		await sendRegistrationOtp(user.email, user.name);
+	}
+
+	return {
+		otpExpiresInSeconds: Number(config.registration_otp_ttl_seconds),
+		resendAvailableInSeconds: RESEND_COOLDOWN_SECONDS,
+	};
+};
+
 const registerUser = async (payload: IRegisterPayload) => {
 	const existingUser = await prisma.user.findUnique({
 		where: { email: payload.email },
@@ -105,27 +158,7 @@ const registerUser = async (payload: IRegisterPayload) => {
 		});
 	}
 
-	const otpValue = crypto.randomInt(100000, 1000000).toString();
-	await redis.set(`register-otp:${payload.email}`, otpValue, {
-		ex: Number(config.registration_otp_ttl_seconds),
-	});
-
-	const templatePath = path.join(
-		process.cwd(),
-		"src/templates/registration-otp.ejs",
-	);
-	const html = await ejs.renderFile(templatePath, {
-		name: payload.name,
-		otp: otpValue,
-		otpExpiresInMinutes: config.registration_otp_ttl_seconds,
-	});
-
-	await transporter.sendMail({
-		from: config.mail_from,
-		to: payload.email,
-		subject: "Verify your DevBench account",
-		html,
-	});
+	await sendRegistrationOtp(payload.email, payload.name);
 
 	return {
 		email: payload.email,
@@ -664,6 +697,7 @@ const logoutUser = async (userId: string) => {
 
 export const authService = {
 	registerUser,
+	resendRegistrationOtp,
 	verifyEmail,
 	loginUser,
 	refreshToken,

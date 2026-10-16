@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+// Emails are stored and looked up lower-cased, so "Jane@Acme.com" and
+// "jane@acme.com" are the same account everywhere.
+const normalizedEmail = (message: string) =>
+	z.string().trim().toLowerCase().pipe(z.email(message));
+
 const strongPassword = z
 	.string()
 	.min(8, "Password must be at least 8 characters")
@@ -15,7 +20,7 @@ const strongPassword = z
 const registerValidationSchema = z
 	.object({
 		name: z.string().min(2, "Name must be at least 2 characters").max(100),
-		email: z.email("Invalid email address"),
+		email: normalizedEmail("Invalid email address"),
 		password: strongPassword,
 		role: z.enum(["CANDIDATE", "COMPANY_OWNER"]).default("CANDIDATE"),
 		companyName: z.string().min(2).max(100).optional(),
@@ -34,12 +39,12 @@ const registerValidationSchema = z
 	);
 
 const loginValidationSchema = z.object({
-	email: z.email("Invalid email address"),
+	email: normalizedEmail("Invalid email address"),
 	password: z.string().min(1, "Password is required"),
 });
 
 const EmailVerificationZodSchema = z.object({
-	email: z.email("Email must be a proper email"),
+	email: normalizedEmail("Email must be a proper email"),
 	otp: z.string().length(6, "OTP must be 6 digits"),
 });
 
@@ -59,16 +64,21 @@ const refreshTokenValidationSchema = z.object({
 });
 
 const forgotPasswordValidationSchema = z.object({
-	email: z.email("Invalid email"),
+	email: normalizedEmail("Invalid email"),
 });
 
 const resetPasswordValidationSchema = z.object({
-	email: z.email("Invalid email"),
+	email: normalizedEmail("Invalid email"),
 	otp: z.string().length(6, "OTP must be 6 digits"),
 	newPassword: strongPassword,
 });
 
+const resendOtpValidationSchema = z.object({
+	email: normalizedEmail("Invalid email"),
+});
+
 export const authValidation = {
+	resendOtpValidationSchema,
 	registerValidationSchema,
 	loginValidationSchema,
 	EmailVerificationZodSchema,
