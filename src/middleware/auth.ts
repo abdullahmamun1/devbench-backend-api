@@ -95,9 +95,18 @@ export const optionalAuth = () => {
 			}
 
 			const { id } = verifiedToken.data as JwtPayload;
-			const user = await prisma.user.findUnique({ where: { id } });
+			const user = await prisma.user.findUnique({
+				where: { id },
+				include: { company: true },
+			});
 
-			if (!user || user.status === "SUSPENDED") {
+			// Same account rules as auth(): blocked users are treated as signed out
+			if (
+				!user ||
+				user.status === "SUSPENDED" ||
+				user.status === "DELETED" ||
+				user.company?.status === "SUSPENDED"
+			) {
 				return next();
 			}
 
