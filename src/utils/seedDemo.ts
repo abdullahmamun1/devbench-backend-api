@@ -49,6 +49,8 @@ interface CodingSeed {
 		weight: number;
 	}[];
 	sampleCode: string;
+	// Other correct solutions, so candidates don't all submit identical code
+	alternatives: string[];
 }
 interface WrittenSeed {
 	key: string;
@@ -57,6 +59,7 @@ interface WrittenSeed {
 	description: string;
 	points: number;
 	sampleAnswer: string;
+	alternatives: string[];
 }
 type ProblemSeed = McqSeed | CodingSeed | WrittenSeed;
 
@@ -148,6 +151,10 @@ const ACME_PROBLEMS: ProblemSeed[] = [
 		],
 		sampleCode:
 			'const input = require("fs").readFileSync(0, "utf8").trim();\nconsole.log(input.split("").reverse().join(""));',
+		alternatives: [
+			'const text = require("fs").readFileSync(0, "utf8").trim();\nlet out = "";\nfor (let i = text.length - 1; i >= 0; i--) {\n  out += text[i];\n}\nprocess.stdout.write(out + "\\n");',
+			'const chars = [...require("fs").readFileSync(0, "utf8").trim()];\nlet left = 0;\nlet right = chars.length - 1;\nwhile (left < right) {\n  [chars[left], chars[right]] = [chars[right], chars[left]];\n  left++;\n  right--;\n}\nconsole.log(chars.join(""));',
+		],
 	},
 	{
 		key: "two-sum",
@@ -173,6 +180,10 @@ const ACME_PROBLEMS: ProblemSeed[] = [
 		],
 		sampleCode:
 			'const [numsLine, targetLine] = require("fs").readFileSync(0, "utf8").trim().split("\\n");\nconst nums = JSON.parse(numsLine);\nconst target = Number(targetLine);\nconst seen = new Map();\nfor (let i = 0; i < nums.length; i++) {\n  if (seen.has(target - nums[i])) {\n    console.log(JSON.stringify([seen.get(target - nums[i]), i]));\n    break;\n  }\n  seen.set(nums[i], i);\n}',
+		alternatives: [
+			'const lines = require("fs").readFileSync(0, "utf8").trim().split("\\n");\nconst nums = JSON.parse(lines[0]);\nconst target = Number(lines[1]);\nouter: for (let a = 0; a < nums.length; a++) {\n  for (let b = a + 1; b < nums.length; b++) {\n    if (nums[a] + nums[b] === target) {\n      console.log(JSON.stringify([a, b]));\n      break outer;\n    }\n  }\n}',
+			'const [first, second] = require("fs").readFileSync(0, "utf8").trim().split("\\n");\nconst values = JSON.parse(first).map((value, index) => ({ value, index }));\nconst goal = Number(second);\nvalues.sort((x, y) => x.value - y.value);\nlet lo = 0;\nlet hi = values.length - 1;\nwhile (lo < hi) {\n  const sum = values[lo].value + values[hi].value;\n  if (sum === goal) break;\n  if (sum < goal) lo++;\n  else hi--;\n}\nconst answer = [values[lo].index, values[hi].index].sort((x, y) => x - y);\nconsole.log(JSON.stringify(answer));',
+		],
 	},
 	{
 		key: "fizzbuzz",
@@ -198,6 +209,10 @@ const ACME_PROBLEMS: ProblemSeed[] = [
 		],
 		sampleCode:
 			'const n = Number(require("fs").readFileSync(0, "utf8").trim());\nfor (let i = 1; i <= n; i++) {\n  console.log(i % 15 === 0 ? "FizzBuzz" : i % 3 === 0 ? "Fizz" : i % 5 === 0 ? "Buzz" : i);\n}',
+		alternatives: [
+			'const limit = parseInt(require("fs").readFileSync(0, "utf8"), 10);\nconst lines = [];\nfor (let n = 1; n <= limit; n++) {\n  let word = "";\n  if (n % 3 === 0) word += "Fizz";\n  if (n % 5 === 0) word += "Buzz";\n  lines.push(word || String(n));\n}\nconsole.log(lines.join("\\n"));',
+			'const count = Number(require("fs").readFileSync(0, "utf8").trim());\nconst say = (k) => {\n  switch (0) {\n    case k % 15: return "FizzBuzz";\n    case k % 3: return "Fizz";\n    case k % 5: return "Buzz";\n    default: return k;\n  }\n};\nArray.from({ length: count }, (_, i) => say(i + 1)).forEach((v) => console.log(v));',
+		],
 	},
 	{
 		key: "valid-parens",
@@ -214,6 +229,10 @@ const ACME_PROBLEMS: ProblemSeed[] = [
 		],
 		sampleCode:
 			'const s = require("fs").readFileSync(0, "utf8").trim();\nconst pairs = { ")": "(", "]": "[", "}": "{" };\nconst stack = [];\nlet ok = true;\nfor (const ch of s) {\n  if ("([{".includes(ch)) stack.push(ch);\n  else if (stack.pop() !== pairs[ch]) { ok = false; break; }\n}\nconsole.log(ok && stack.length === 0);',
+		alternatives: [
+			'let s = require("fs").readFileSync(0, "utf8").trim();\nlet previous;\ndo {\n  previous = s;\n  s = s.replace("()", "").replace("[]", "").replace("{}", "");\n} while (s !== previous);\nconsole.log(s.length === 0);',
+			'const input = require("fs").readFileSync(0, "utf8").trim();\nconst closing = new Map([["(", ")"], ["[", "]"], ["{", "}"]]);\nconst expected = [];\nfunction isBalanced() {\n  for (const c of input) {\n    if (closing.has(c)) expected.push(closing.get(c));\n    else if (expected.length === 0 || expected.pop() !== c) return false;\n  }\n  return expected.length === 0;\n}\nconsole.log(isBalanced());',
+		],
 	},
 	{
 		key: "event-loop",
@@ -224,6 +243,10 @@ const ACME_PROBLEMS: ProblemSeed[] = [
 		points: 15,
 		sampleAnswer:
 			"JavaScript runs on a single thread with one call stack. When asynchronous work such as a timer or a network request finishes, its callback is placed in a queue. The event loop watches the call stack and, once it is empty, moves the next callback from the queue onto the stack. Promise callbacks go into the microtask queue, which is drained completely before the next task from the normal queue runs, so a resolved promise always runs before a setTimeout of zero.",
+		alternatives: [
+			"The browser gives JavaScript one main thread. Code runs to completion on the call stack, and anything asynchronous, like setTimeout or fetch, is handed to the browser. When that work is done, its callback waits in the task queue. Each time the stack empties, the event loop first runs every microtask, such as promise reactions, and only then takes one task from the task queue. That ordering is why a promise.then fires before a zero-delay timer.",
+			"Think of three parts. The call stack holds whatever is running right now. Web APIs handle timers, events and network requests outside the stack. Queues hold callbacks that are ready: microtasks (promises, queueMicrotask) and macrotasks (timers, events). The loop repeats one rule: when the stack is empty, empty the whole microtask queue, then run the next macrotask. A long synchronous loop blocks all of this, which is why the page freezes.",
+		],
 	},
 	{
 		key: "rest-graphql",
@@ -234,6 +257,10 @@ const ACME_PROBLEMS: ProblemSeed[] = [
 		points: 20,
 		sampleAnswer:
 			"REST exposes many endpoints, each returning a fixed shape, which makes caching and tooling simple but can cause over-fetching and several round trips on slow mobile networks. GraphQL exposes one endpoint where the client asks for exactly the fields it needs, which reduces payload size and round trips, at the cost of more complex caching, query cost control and server setup. I would pick REST for simple, cache-friendly APIs and GraphQL when many client types need flexible data from related entities.",
+		alternatives: [
+			"With REST every resource has its own URL and the server decides the response shape. That is easy to cache with HTTP and simple to monitor, but a mobile screen often needs data from several resources, so it either makes many requests or gets fields it never uses. GraphQL lets the app send one query describing exactly what the screen needs. I would start with REST for a small, stable API and move to GraphQL when several clients need different views of connected data.",
+			"For a mobile app the main costs are latency and battery, so round trips matter. REST is mature, cacheable at the CDN and easy to secure per endpoint, but screens that combine users, orders and products need several calls. GraphQL batches that into one request with a typed schema the app can rely on, though you must guard against expensive queries and lose simple URL caching. My rule: REST for public or simple CRUD APIs, GraphQL for data-heavy apps with many screens.",
+		],
 	},
 	{
 		key: "slow-page",
@@ -244,6 +271,10 @@ const ACME_PROBLEMS: ProblemSeed[] = [
 		points: 20,
 		sampleAnswer:
 			"First I would measure instead of guess: run Lighthouse and record a profile in the browser performance tab to see whether the delay is network, rendering or JavaScript. For network I would check payload sizes, image formats, caching headers and slow API calls. For rendering I would look at layout shifts and large images without dimensions. For JavaScript I would find long tasks and split or lazy-load heavy bundles. After each change I would measure again to confirm it helped.",
+		alternatives: [
+			"I would start by reproducing it on a throttled connection and a mid-range phone, because that is what real users have. The network panel shows whether the HTML or API responses are slow or whether we ship too many bytes; the performance profile shows long tasks and expensive renders. Typical fixes are compressing and resizing images, caching API responses, deferring third-party scripts and code-splitting large bundles. I would watch Core Web Vitals before and after to prove the fix.",
+			"Step one is data: check real-user metrics like LCP and INP to see which part is slow and for whom. Then dig in with the browser tools: a waterfall for slow requests, a CPU profile for heavy JavaScript, and the rendering panel for layout thrashing. Usually the culprits are an unoptimised hero image, a blocking font or script, or an N+1 API call. Fix the biggest one first, deploy, and compare the metrics again.",
+		],
 	},
 ];
 
@@ -277,6 +308,10 @@ const GLOBEX_PROBLEMS: ProblemSeed[] = [
 		points: 20,
 		sampleAnswer:
 			"Valid credentials sign the user in. A wrong password and an unknown email show a clear error without revealing which one is wrong. Empty fields and a badly formatted email show validation messages. A locked or suspended account is refused with a helpful message. I would also test the password visibility toggle, keyboard submission with Enter, and rate limiting after repeated failures.",
+		alternatives: [
+			"Happy path: correct email and password logs in and redirects. Negative cases: wrong password, unknown email (same generic error for both), empty fields, invalid email format, and a password over the maximum length. Security: the password is masked, the form is protected against brute force with rate limiting, and the session cookie is httpOnly. Accessibility: labels, error announcements and keyboard-only use.",
+			"I would group the cases. Validation: required fields, email format, trimming spaces. Authentication: valid login, wrong password, unknown user, suspended account. Behaviour: Enter key submits, the show-password toggle works, the button disables while submitting. Abuse: lockout or rate limit after repeated failures. Finally a few end-to-end tests that log in through the real UI.",
+		],
 	},
 ];
 
@@ -743,12 +778,41 @@ const createAssessments = async (
 	return records;
 };
 
+// One planted case so the integrity check has something real to find: on Two
+// Sum, Kamal Uddin (candidate 7) submits Imran Hossain's (candidate 5) solution
+// with every name changed, reformatted and commented.
+const PLANTED_COPIES: Record<string, Record<number, string>> = {
+	"two-sum": {
+		7: '// pair finder: sort a copy, then walk inward from both ends\nconst [rawList, rawGoal] = require("fs").readFileSync(0, "utf8").trim().split("\\n");\nconst entries = JSON.parse(rawList).map((num, pos) => ({ num, pos }));\nconst wanted = Number(rawGoal);\n\nentries.sort((p, q) => p.num - q.num);\n\nlet i = 0, j = entries.length - 1;\nwhile (i < j)\n{\n  const total = entries[i].num + entries[j].num; // current pair\n  if (total === wanted) break;\n  if (total < wanted) i++;\n  else j--;\n}\n\nconst result = [entries[i].pos, entries[j].pos].sort((p, q) => p - q);\nconsole.log(JSON.stringify(result));',
+	},
+};
+
+// Most candidates split between two common approaches (written answers too),
+// which the integrity check treats as common ground. On two coding problems a
+// third, rarer approach goes to one candidate, so only the planted copy of it
+// stands out.
+const RARE_APPROACH: Record<string, number> = {
+	"two-sum": 5,
+	"valid-parens": 2,
+};
+
+const answerFor = (seed: CodingSeed | WrittenSeed, variant: number) => {
+	const planted = PLANTED_COPIES[seed.key]?.[variant];
+	if (planted) return planted;
+	const sample = seed.type === "CODING" ? seed.sampleCode : seed.sampleAnswer;
+	if (RARE_APPROACH[seed.key] === variant) {
+		return seed.alternatives[1] ?? sample;
+	}
+	return variant % 2 === 0 ? sample : (seed.alternatives[0] ?? sample);
+};
+
 const createAttempt = async (
 	assessment: AssessmentRecord,
 	candidateId: string,
 	state: PlanState,
 	when: Date,
 	evaluator: UserRef,
+	variant: number,
 ) => {
 	const inProgress = state === "in-progress";
 	const attempt = await prisma.attempt.create({
@@ -806,8 +870,8 @@ const createAttempt = async (
 				problemId: record.id,
 				submittedAt,
 				...(seed.type === "CODING"
-					? { code: seed.sampleCode, language: "javascript" }
-					: { answerText: seed.sampleAnswer }),
+					? { code: answerFor(seed, variant), language: "javascript" }
+					: { answerText: answerFor(seed, variant) }),
 			},
 		});
 		if (inProgress) continue;
@@ -972,6 +1036,7 @@ const runPlan = async (
 					step.state,
 					when,
 					evaluator,
+					step.candidate === "main" ? 0 : step.candidate,
 				);
 			}
 		}
