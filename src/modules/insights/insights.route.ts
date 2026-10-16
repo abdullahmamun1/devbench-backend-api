@@ -32,6 +32,14 @@ router.get(
 	insightsController.getSubmissionSimilarity,
 );
 
+// Smart assessment builder, for the roles that can edit assessments
+router.get(
+	"/assessments/:id/suggestions",
+	auth(UserRole.ADMIN, UserRole.COMPANY_OWNER, UserRole.ASSESSMENT_CREATOR),
+	rateLimiter(),
+	insightsController.getProblemSuggestions,
+);
+
 router.get(
 	"/assessments/:id",
 	auth(...COMPANY_ROLES),

@@ -2,6 +2,14 @@ import { prisma } from "../../lib/prisma";
 import { redis } from "../../lib/redis";
 import { createError } from "../../utils/createError";
 import { resolveCompanyScope } from "../../utils/scoping";
+import {
+	BUFFER_SHARE,
+	buildPlan,
+	type DifficultyPreference,
+	describe,
+	type IBuilderProblem,
+	type TypeMix,
+} from "./assessmentBuilder";
 import type { ICallerInfo } from "./insights.interface";
 import { insightsUtil } from "./insights.util";
 import {
@@ -438,7 +446,183 @@ const getAttemptInsights = async (attemptId: string, caller: ICallerInfo) => {
 	};
 };
 
+// How many past attempts and graded answers to learn timings and difficulty from
+const MAX_TIMED_ATTEMPTS = 300;
+const MAX_SCORE_SAMPLES = 5000;
+// Below this there's no room for a useful suggestion
+const MIN_BUDGET_MINUTES = 3;
+
+// Timing and score history for a set of problems, from this company's own
+// attempts only.
+const loadProblemHistory = async (companyId: string, problemIds: string[]) => {
+	const timeSamples = new Map<string, number[]>();
+	const scoreSamples = new Map<string, number[]>();
+	if (problemIds.length === 0) return { timeSamples, scoreSamples };
+
+	const [attempts, results] = await Promise.all([
+		prisma.attempt.findMany({
+			where: {
+				status: "SUBMITTED",
+				assessment: { companyId },
+				events: {
+					some: { type: "QUESTION_VIEWED", problemId: { in: problemIds } },
+				},
+			},
+			orderBy: { updatedAt: "desc" },
+			take: MAX_TIMED_ATTEMPTS,
+			select: {
+				status: true,
+				updatedAt: true,
+				expiresAt: true,
+				events: { select: { type: true, problemId: true, occurredAt: true } },
+			},
+		}),
+		prisma.submissionResult.findMany({
+			where: {
+				status: { not: "PENDING_REVIEW" },
+				maxScore: { gt: 0 },
+				submission: {
+					problemId: { in: problemIds },
+					attempt: { assessment: { companyId } },
+				},
+			},
+			orderBy: { createdAt: "desc" },
+			take: MAX_SCORE_SAMPLES,
+			select: {
+				score: true,
+				maxScore: true,
+				submission: { select: { problemId: true } },
+			},
+		}),
+	]);
+
+	const push = (map: Map<string, number[]>, id: string, value: number) => {
+		const list = map.get(id);
+		if (list) list.push(value);
+		else map.set(id, [value]);
+	};
+
+	for (const attempt of attempts) {
+		const { perProblem } = insightsUtil.summarizeSignals(
+			attempt.events,
+			attemptEnd(attempt),
+		);
+		for (const p of perProblem) {
+			if (p.viewedSeconds > 0) push(timeSamples, p.problemId, p.viewedSeconds);
+		}
+	}
+	for (const r of results) {
+		push(scoreSamples, r.submission.problemId, r.score / r.maxScore);
+	}
+
+	return { timeSamples, scoreSamples };
+};
+
+export interface ISuggestionOptions {
+	minutes?: number;
+	mix: TypeMix;
+	difficulty: DifficultyPreference;
+}
+
+// Smart assessment builder: suggests problems from the bank that fill the
+// time left in an assessment with the chosen type mix and difficulty.
+const getProblemSuggestions = async (
+	assessmentId: string,
+	caller: ICallerInfo,
+	options: ISuggestionOptions,
+) => {
+	const scopeCompanyId = resolveCompanyScope(caller);
+
+	const assessment = await prisma.assessment.findFirst({
+		where: {
+			id: assessmentId,
+			deletedAt: null,
+			...(scopeCompanyId && { companyId: scopeCompanyId }),
+		},
+		select: {
+			id: true,
+			companyId: true,
+			durationMinutes: true,
+			assessmentProblems: {
+				select: {
+					points: true,
+					problem: { select: { id: true, title: true, type: true } },
+				},
+			},
+		},
+	});
+
+	if (!assessment) {
+		throw createError(404, "Assessment not found");
+	}
+
+	const attachedIds = assessment.assessmentProblems.map((ap) => ap.problem.id);
+	const pool = await prisma.problem.findMany({
+		where: {
+			deletedAt: null,
+			id: { notIn: attachedIds },
+			OR: [{ companyId: assessment.companyId }, { companyId: null }],
+		},
+		// Newest first, so equally good plans favour fresh problems
+		orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+		take: 500,
+		select: { id: true, title: true, type: true, points: true },
+	});
+
+	const { timeSamples, scoreSamples } = await loadProblemHistory(
+		assessment.companyId,
+		[...attachedIds, ...pool.map((p) => p.id)],
+	);
+	const withHistory = (p: {
+		id: string;
+		title: string;
+		type: IBuilderProblem["type"];
+		points: number;
+	}): IBuilderProblem => ({
+		...p,
+		timeSamples: timeSamples.get(p.id) ?? [],
+		scoreSamples: scoreSamples.get(p.id) ?? [],
+	});
+
+	const targetMinutes = options.minutes ?? assessment.durationMinutes;
+	const attachedMinutes = assessment.assessmentProblems
+		.map((ap) => describe(withHistory({ ...ap.problem, points: ap.points })))
+		.reduce((sum, p) => sum + p.minutes, 0);
+	const bufferMinutes = Math.round(targetMinutes * BUFFER_SHARE);
+	const budgetMinutes = Math.max(
+		0,
+		targetMinutes - bufferMinutes - attachedMinutes,
+	);
+
+	const plan = buildPlan({
+		pool: pool.map(withHistory),
+		budgetMinutes,
+		mix: options.mix,
+		preference: options.difficulty,
+	});
+
+	// Too little time left for even a quick question: say so, nothing else
+	if (budgetMinutes < MIN_BUDGET_MINUTES) {
+		plan.notes = [
+			`The problems already attached fill about ${attachedMinutes} of ${targetMinutes} minutes. Raise the duration to add more.`,
+		];
+	}
+
+	return {
+		assessmentId: assessment.id,
+		targetMinutes,
+		bufferMinutes,
+		attachedCount: attachedIds.length,
+		attachedMinutes,
+		budgetMinutes,
+		mix: options.mix,
+		difficulty: options.difficulty,
+		...plan,
+	};
+};
+
 export const insightsService = {
+	getProblemSuggestions,
 	getAttemptSignals,
 	getSubmissionSimilarity,
 	getAssessmentInsights,

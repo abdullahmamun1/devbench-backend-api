@@ -4,6 +4,7 @@ import type { Prisma } from "../../generated/prisma/client";
 import config from "../config/index.js";
 import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
+import { estimateMinutes } from "../modules/insights/assessmentBuilder.js";
 import { seedAllRoles } from "./seed.js";
 
 // ---------------------------------------------------------------------------
@@ -806,6 +807,39 @@ const answerFor = (seed: CodingSeed | WrittenSeed, variant: number) => {
 	return variant % 2 === 0 ? sample : (seed.alternatives[0] ?? sample);
 };
 
+// Small stable number from a string, so seeded timings never change between runs
+const hashOf = (text: string) =>
+	[...text].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+
+// How long a candidate looked at each question, in seconds. Each problem
+// has its own pace (some take longer than their type suggests) and each
+// candidate works a bit faster or slower. Scaled to fit inside the timer.
+const viewTimeline = (
+	assessment: AssessmentRecord,
+	variant: number,
+	when: Date,
+) => {
+	const raw = assessment.problems.map(({ record, points }, index) => {
+		const pace = 0.7 + (hashOf(record.seed.key) % 70) / 100;
+		const speed = 0.75 + ((variant * 37 + index * 11) % 45) / 100;
+		return estimateMinutes(record.seed.type, points) * 60 * pace * speed;
+	});
+	const limit = assessment.seed.durationMinutes * 60 * 0.92;
+	const total = raw.reduce((a, b) => a + b, 0);
+	const scale = total > limit ? limit / total : 1;
+
+	let at = when.getTime() + 20_000;
+	return raw.map((seconds, index) => {
+		const start = new Date(at);
+		at += Math.max(15, Math.round(seconds * scale)) * 1000;
+		return {
+			problemId: assessment.problems[index].record.id,
+			start,
+			end: new Date(at),
+		};
+	});
+};
+
 const createAttempt = async (
 	assessment: AssessmentRecord,
 	candidateId: string,
@@ -828,11 +862,25 @@ const createAttempt = async (
 
 	let total = 0;
 	let pending = false;
+	const timeline = inProgress ? null : viewTimeline(assessment, variant, when);
+
+	// Question views feed time-per-question insights and the smart builder
+	if (timeline) {
+		await prisma.attemptEvent.createMany({
+			data: timeline.map((view) => ({
+				attemptId: attempt.id,
+				type: "QUESTION_VIEWED" as const,
+				problemId: view.problemId,
+				occurredAt: view.start,
+			})),
+		});
+	}
 
 	for (const [index, { record, points }] of assessment.problems.entries()) {
 		if (inProgress && index > 0) break;
 		const { seed } = record;
-		const submittedAt = addMinutes(when, 5 + index * 6);
+		const submittedAt =
+			timeline?.[index].end ?? addMinutes(when, 5 + index * 6);
 
 		if (seed.type === "MCQ") {
 			const wantCorrect =
@@ -917,7 +965,11 @@ const createAttempt = async (
 	if (!inProgress) {
 		await prisma.attempt.update({
 			where: { id: attempt.id },
-			data: { totalScore: pending ? null : total },
+			data: {
+				totalScore: pending ? null : total,
+				// Insights read this as the moment the candidate finished
+				updatedAt: timeline?.at(-1)?.end ?? when,
+			},
 		});
 	}
 };

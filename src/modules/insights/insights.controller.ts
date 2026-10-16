@@ -4,6 +4,7 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import type { ICallerInfo } from "./insights.interface";
 import { insightsService } from "./insights.service";
+import { insightsValidation } from "./insights.validation";
 
 const getAttemptSignals = catchAsync(async (req: Request, res: Response) => {
 	const caller: ICallerInfo = {
@@ -73,7 +74,31 @@ const getAttemptInsights = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const getProblemSuggestions = catchAsync(
+	async (req: Request, res: Response) => {
+		const query = await insightsValidation.suggestionsQuerySchema.parseAsync(
+			req.query,
+		);
+		const result = await insightsService.getProblemSuggestions(
+			req.params.id as string,
+			callerOf(req),
+			{
+				minutes: query.minutes,
+				mix: { CODING: query.coding, MCQ: query.mcq, WRITTEN: query.written },
+				difficulty: query.difficulty,
+			},
+		);
+		sendResponse(res, {
+			statusCode: httpStatus.OK,
+			success: true,
+			message: "Problem suggestions ready",
+			data: result,
+		});
+	},
+);
+
 export const insightsController = {
+	getProblemSuggestions,
 	getAttemptSignals,
 	getSubmissionSimilarity,
 	getAssessmentInsights,
