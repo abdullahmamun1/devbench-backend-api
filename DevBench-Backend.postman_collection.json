@@ -2096,6 +2096,24 @@
 						},
 						"description": "Registers + joins in one step for someone with no existing account. For an existing logged-in user accepting instead, send this with an Authorization header and an empty body."
 					}
+				},
+				{
+					"name": "Get Company Activity (dashboard charts) - Company Owner",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{companyOwnerAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/companies/me/activity",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "me", "activity"]
+						},
+						"description": "Invitations and submissions per month (last 6 months), attempt outcomes and average score by problem type. Also open to ASSESSMENT_CREATOR and EVALUATOR."
+					}
 				}
 			]
 		},
@@ -2554,6 +2572,31 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["insights", "attempts", "{{attemptId}}"]
 						}
+					}
+				},
+				{
+					"name": "Get Problem Suggestions (Smart Pick) - Assessment Creator",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{assessmentCreatorAccessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/insights/assessments/{{assessmentId}}/suggestions?minutes=60&coding=50&mcq=30&written=20&difficulty=balanced",
+							"host": ["{{baseUrl}}"],
+							"path": ["insights", "assessments", "{{assessmentId}}", "suggestions"],
+							"query": [
+								{ "key": "minutes", "value": "60" },
+								{ "key": "coding", "value": "50" },
+								{ "key": "mcq", "value": "30" },
+								{ "key": "written", "value": "20" },
+								{ "key": "difficulty", "value": "balanced", "description": "easier | balanced | harder" }
+							]
+						},
+						"description": "Smart assessment builder. Suggests bank problems that fill the time left in the assessment with the chosen type mix and difficulty. Read-only; attach the picks with POST /assessments/:id/problems/bulk."
 					}
 				}
 			]
