@@ -1,6 +1,10 @@
 import { prisma } from "../../lib/prisma";
 import { createError } from "../../utils/createError";
-import type { ICallerInfo, ISubmitAnswerPayload } from "./attempt.interface";
+import type {
+	IAttemptEventInput,
+	ICallerInfo,
+	ISubmitAnswerPayload,
+} from "./attempt.interface";
 import { attemptUtil } from "./attempt.util";
 
 const startAttempt = async (assessmentId: string, caller: ICallerInfo) => {
@@ -243,10 +247,71 @@ const finalSubmit = async (attemptId: string, caller: ICallerInfo) => {
 	);
 };
 
+// Hard cap per attempt so a misbehaving or hostile client can't flood the table.
+const MAX_EVENTS_PER_ATTEMPT = 2000;
+
+// Stores integrity events from the exam screen. Events arriving after the cap,
+// or for a problem outside the assessment, are dropped rather than rejected so
+// the exam itself is never interrupted by signal logging.
+const recordEvents = async (
+	attemptId: string,
+	events: IAttemptEventInput[],
+	caller: ICallerInfo,
+) => {
+	const found = await prisma.attempt.findFirst({
+		where: { id: attemptId, candidateId: caller.userId },
+	});
+
+	if (!found) {
+		throw createError(404, "Attempt not found");
+	}
+
+	const attempt = await attemptUtil.ensureNotExpired(found, caller);
+
+	if (attempt.status !== "IN_PROGRESS") {
+		throw createError(400, "This attempt is no longer in progress");
+	}
+
+	const [stored, assessmentProblems] = await Promise.all([
+		prisma.attemptEvent.count({ where: { attemptId } }),
+		prisma.assessmentProblem.findMany({
+			where: { assessmentId: attempt.assessmentId },
+			select: { problemId: true },
+		}),
+	]);
+
+	const room = Math.max(0, MAX_EVENTS_PER_ATTEMPT - stored);
+	const problemIds = new Set(assessmentProblems.map((ap) => ap.problemId));
+
+	// Client clocks drift: keep each timestamp inside the attempt's window.
+	const earliest = (attempt.startedAt ?? attempt.createdAt).getTime();
+	const now = Date.now();
+	const clamp = (iso: string) =>
+		new Date(Math.min(Math.max(new Date(iso).getTime(), earliest), now));
+
+	const data = events
+		.filter((e) => !e.problemId || problemIds.has(e.problemId))
+		.slice(0, room)
+		.map((e) => ({
+			attemptId,
+			type: e.type,
+			problemId: e.problemId ?? null,
+			occurredAt: clamp(e.occurredAt),
+			meta: e.type === "PASTE" ? { chars: e.chars ?? 0 } : undefined,
+		}));
+
+	if (data.length > 0) {
+		await prisma.attemptEvent.createMany({ data });
+	}
+
+	return { accepted: data.length, dropped: events.length - data.length };
+};
+
 export const attemptService = {
 	startAttempt,
 	getMyAttempts,
 	getAttemptById,
 	upsertSubmission,
 	finalSubmit,
+	recordEvents,
 };

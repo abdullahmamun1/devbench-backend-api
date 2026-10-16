@@ -72,3 +72,10 @@ enum PaymentStatus {
   SUCCEEDED
   FAILED
 }
+
+enum AttemptEventType {
+  TAB_HIDDEN
+  TAB_VISIBLE
+  PASTE
+  QUESTION_VIEWED
+}

@@ -13,6 +13,7 @@ model Problem {
   mcqOptions         McqOption[]
   assessmentProblems AssessmentProblem[]
   submissions        Submission[]
+  attemptEvents      AttemptEvent[]
 
   @@index([companyId])
 }

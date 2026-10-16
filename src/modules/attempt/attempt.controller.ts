@@ -87,7 +87,29 @@ const finalSubmit = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const recordEvents = catchAsync(async (req: Request, res: Response) => {
+	const attemptId = req.params.id as string;
+	const caller: ICallerInfo = {
+		userId: req.user!.userId,
+		role: req.user!.role,
+		companyId: req.user!.companyId,
+	};
+	const result = await attemptService.recordEvents(
+		attemptId,
+		req.body.events,
+		caller,
+	);
+
+	sendResponse(res, {
+		statusCode: httpStatus.CREATED,
+		success: true,
+		message: "Events recorded",
+		data: result,
+	});
+});
+
 export const attemptController = {
+	recordEvents,
 	startAttempt,
 	getMyAttempts,
 	getAttemptById,

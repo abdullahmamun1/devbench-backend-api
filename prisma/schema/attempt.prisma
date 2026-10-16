@@ -11,6 +11,7 @@ model Attempt {
   assessment   Assessment    @relation(fields: [assessmentId], references: [id])
   candidate    User          @relation(fields: [candidateId], references: [id])
   submissions  Submission[]
+  events       AttemptEvent[]
 
   @@unique([assessmentId, candidateId])
   @@index([assessmentId, candidateId])
@@ -49,3 +50,19 @@ model SubmissionResult {
   @@index([status])
 }
 
+
+// Exam-integrity signals reported by the exam screen (tab switches, pastes,
+// question views). Shown to evaluators as signals, never used for scoring.
+model AttemptEvent {
+  id         String           @id @default(uuid())
+  attemptId  String
+  type       AttemptEventType
+  problemId  String?
+  meta       Json?
+  occurredAt DateTime
+  createdAt  DateTime         @default(now())
+  attempt    Attempt          @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  problem    Problem?         @relation(fields: [problemId], references: [id])
+
+  @@index([attemptId, occurredAt])
+}
