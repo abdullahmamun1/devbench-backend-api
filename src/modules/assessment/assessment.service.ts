@@ -65,6 +65,11 @@ const getAllAssessments = async (
 		where.status = query.status;
 	}
 
+	const search = query.search?.trim();
+	if (search) {
+		where.title = { contains: search, mode: "insensitive" };
+	}
+
 	const [total, data] = await Promise.all([
 		prisma.assessment.count({ where }),
 		prisma.assessment.findMany({

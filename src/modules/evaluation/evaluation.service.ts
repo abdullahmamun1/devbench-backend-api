@@ -18,15 +18,27 @@ const getPendingSubmissions = async (
 	const limit = Number(query.limit) || 10;
 	const skip = (page - 1) * limit;
 
+	const type = (["CODING", "WRITTEN"] as const).find((t) => t === query.type);
+	const search = query.search?.trim();
+	const contains = { contains: search, mode: "insensitive" as const };
+
 	const where: Prisma.SubmissionResultWhereInput = {
 		status: "PENDING_REVIEW",
-		...(scopeCompanyId && {
-			submission: {
-				attempt: {
+		submission: {
+			...(type && { problem: { type } }),
+			attempt: {
+				...(scopeCompanyId && {
 					assessment: { companyId: scopeCompanyId },
-				},
+				}),
+				...(search && {
+					OR: [
+						{ candidate: { name: contains } },
+						{ candidate: { email: contains } },
+						{ assessment: { title: contains } },
+					],
+				}),
 			},
-		}),
+		},
 	};
 
 	const [total, data] = await Promise.all([

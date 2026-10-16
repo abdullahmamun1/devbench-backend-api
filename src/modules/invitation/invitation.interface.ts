@@ -11,6 +11,8 @@ export interface IAcceptInvitationPayload {
 
 export interface IInvitationFilterQuery {
 	status?: "PENDING" | "ACCEPTED" | "EXPIRED";
+	// Matches the candidate's email, case-insensitive
+	search?: string;
 	page?: string | number;
 	limit?: string | number;
 }

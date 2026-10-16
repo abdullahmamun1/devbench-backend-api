@@ -10,6 +10,7 @@ export interface ICallerInfo {
 }
 
 export interface IPaymentFilterQuery {
+	status?: string;
 	page?: string | number;
 	limit?: string | number;
 }

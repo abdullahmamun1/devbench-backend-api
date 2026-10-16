@@ -135,10 +135,16 @@ const getPaymentHistory = async (
 	const limit = Number(query.limit) || 10;
 	const skip = (page - 1) * limit;
 
+	// Unknown values are ignored rather than passed to Prisma
+	const status = (["PENDING", "SUCCEEDED", "FAILED"] as const).find(
+		(s) => s === query.status,
+	);
+	const where = { companyId: caller.companyId, ...(status && { status }) };
+
 	const [total, data] = await Promise.all([
-		prisma.payment.count({ where: { companyId: caller.companyId } }),
+		prisma.payment.count({ where }),
 		prisma.payment.findMany({
-			where: { companyId: caller.companyId },
+			where,
 			skip,
 			take: limit,
 			orderBy: { createdAt: "desc" },

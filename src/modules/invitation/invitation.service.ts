@@ -162,9 +162,13 @@ const getAllInvitations = async (
 		throw createError(404, "Assessment not found");
 	}
 
+	const search = query.search?.trim();
 	const where: Prisma.InvitationWhereInput = {
 		assessmentId,
 		...(query.status && { status: query.status }),
+		...(search && {
+			candidateEmail: { contains: search, mode: "insensitive" },
+		}),
 	};
 
 	const [total, data] = await Promise.all([

@@ -26,6 +26,8 @@ export interface IAttachProblemsPayload {
 
 export interface IAssessmentFilterQuery {
 	status?: "DRAFT" | "PUBLISHED" | "CLOSED";
+	// Matches the title, case-insensitive
+	search?: string;
 	page?: string | number;
 	limit?: string | number;
 	sortBy?: string;

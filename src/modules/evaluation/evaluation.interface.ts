@@ -7,6 +7,9 @@ export interface IGradeSubmissionPayload {
 }
 
 export interface IEvaluationFilterQuery {
+	type?: string;
+	// Matches the candidate's name or email, or the assessment title
+	search?: string;
 	page?: string | number;
 	limit?: string | number;
 }
