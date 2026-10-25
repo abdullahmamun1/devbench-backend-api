@@ -56,6 +56,14 @@ export const auth = (...requiredRoles: UserRole[]) => {
 			if (user.company?.status === "SUSPENDED") {
 				throw createError(403, "Your company's account has been suspended");
 			}
+			// Role-based access: auth(UserRole.X, ...) only lets those roles through.
+			// auth() with no roles allows any signed-in user.
+			if (requiredRoles.length && !requiredRoles.includes(user.role)) {
+				throw createError(
+					403,
+					"You do not have permission to access this resource",
+				);
+			}
 
 			req.user = {
 				userId: user.id,
