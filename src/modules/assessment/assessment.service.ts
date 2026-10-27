@@ -12,6 +12,14 @@ import type {
 	IUpdateAssessmentPayload,
 } from "./assessment.interface";
 
+const ASSESSMENT_SORT_FIELDS = [
+	"createdAt",
+	"updatedAt",
+	"title",
+	"durationMinutes",
+	"status",
+];
+
 const createAssessment = async (
 	payload: ICreateAssessmentPayload,
 	caller: ICallerInfo,
@@ -51,8 +59,12 @@ const getAllAssessments = async (
 	const page = Number(query.page) || 1;
 	const limit = Number(query.limit) || 10;
 	const skip = (page - 1) * limit;
-	const sortBy = query.sortBy || "createdAt";
-	const sortOrder = query.sortOrder || "desc";
+	// Only known columns, so a query string can't order by relations or fail.
+	const sortBy =
+		query.sortBy && ASSESSMENT_SORT_FIELDS.includes(query.sortBy)
+			? query.sortBy
+			: "createdAt";
+	const sortOrder = query.sortOrder === "asc" ? "asc" : "desc";
 
 	const scopeCompanyId = resolveCompanyScope(caller);
 

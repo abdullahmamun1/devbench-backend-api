@@ -14,6 +14,17 @@ const finalizeAttempt = async (
 	trigger: "MANUAL" | "AUTO_EXPIRY",
 ) => {
 	return await prisma.$transaction(async (tx) => {
+		// Claim the attempt first. The conditional update locks the row, so a
+		// second finalize (double submit, or submit racing expiry) waits, then
+		// matches nothing and returns the already graded attempt.
+		const claimed = await tx.attempt.updateMany({
+			where: { id: attemptId, status: "IN_PROGRESS" },
+			data: { status: "SUBMITTED" },
+		});
+		if (claimed.count === 0) {
+			return tx.attempt.findUniqueOrThrow({ where: { id: attemptId } });
+		}
+
 		const assessmentProblems = await tx.assessmentProblem.findMany({
 			where: { assessmentId },
 			include: { problem: true },
@@ -87,10 +98,7 @@ const finalizeAttempt = async (
 
 		const updatedAttempt = await tx.attempt.update({
 			where: { id: attemptId },
-			data: {
-				status: "SUBMITTED",
-				totalScore: anyPending ? null : totalScore,
-			},
+			data: { totalScore: anyPending ? null : totalScore },
 		});
 
 		await writeAuditLog(

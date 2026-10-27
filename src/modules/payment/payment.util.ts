@@ -7,14 +7,14 @@ import { prisma } from "../../lib/prisma";
 import { writeAuditLog } from "../../utils/auditLog";
 
 const handleSessionCompleted = async (session: Stripe.Checkout.Session) => {
-	await prisma.$transaction(async (tx) => {
+	const confirmation = await prisma.$transaction(async (tx) => {
 		const payment = await tx.payment.findUnique({
 			where: { stripeSessionId: session.id },
 		});
 
 		if (!payment) {
 			console.error(`Webhook received for unknown session: ${session.id}`);
-			return;
+			return null;
 		}
 
 		const claimed = await tx.payment.updateMany({
@@ -23,7 +23,7 @@ const handleSessionCompleted = async (session: Stripe.Checkout.Session) => {
 		});
 
 		if (claimed.count === 0) {
-			return; // already processed by a concurrent/earlier delivery
+			return null; // already processed by a concurrent/earlier delivery
 		}
 
 		const owner = await tx.user.findFirst({
@@ -45,48 +45,55 @@ const handleSessionCompleted = async (session: Stripe.Checkout.Session) => {
 			},
 		});
 
-		if (owner) {
-			try {
-				const templatePath = path.join(
-					process.cwd(),
-					"src/templates/payment-success.ejs",
-				);
-				const html = await ejs.renderFile(templatePath, {
-					companyName: company.companyName,
-					creditsPurchased: payment.creditsPurchased,
-					amountPaid: (payment.amount / 100).toFixed(2),
-				});
-
-				await transporter.sendMail({
-					from: config.mail_from,
-					to: owner.email,
-					subject: "Payment confirmed — DevBench",
-					html,
-				});
-			} catch (emailError) {
-				console.error("Payment confirmation email failed:", emailError);
-			}
-
-			await writeAuditLog(
-				{
-					actorId: owner.id,
-					actorRole: "COMPANY_OWNER",
-					action: "PAYMENT_SUCCEEDED",
-					entityType: "Payment",
-					entityId: payment.id,
-					metadata: {
-						creditsPurchased: payment.creditsPurchased,
-						amount: payment.amount,
-					},
-				},
-				tx,
-			);
-		} else {
+		if (!owner) {
 			console.error(
 				`No COMPANY_OWNER found for company ${payment.companyId} — cannot attribute audit log`,
 			);
+			return null;
 		}
+
+		await writeAuditLog(
+			{
+				actorId: owner.id,
+				actorRole: "COMPANY_OWNER",
+				action: "PAYMENT_SUCCEEDED",
+				entityType: "Payment",
+				entityId: payment.id,
+				metadata: {
+					creditsPurchased: payment.creditsPurchased,
+					amount: payment.amount,
+				},
+			},
+			tx,
+		);
+
+		return { owner, company, payment };
 	});
+
+	// Sent after the commit: a slow mail server must not time out the
+	// transaction, roll back the credits and make Stripe retry the webhook.
+	if (!confirmation) return;
+	const { owner, company, payment } = confirmation;
+	try {
+		const templatePath = path.join(
+			process.cwd(),
+			"src/templates/payment-success.ejs",
+		);
+		const html = await ejs.renderFile(templatePath, {
+			companyName: company.companyName,
+			creditsPurchased: payment.creditsPurchased,
+			amountPaid: (payment.amount / 100).toFixed(2),
+		});
+
+		await transporter.sendMail({
+			from: config.mail_from,
+			to: owner.email,
+			subject: "Payment confirmed — DevBench",
+			html,
+		});
+	} catch (emailError) {
+		console.error("Payment confirmation email failed:", emailError);
+	}
 };
 
 const handleSessionExpired = async (session: Stripe.Checkout.Session) => {

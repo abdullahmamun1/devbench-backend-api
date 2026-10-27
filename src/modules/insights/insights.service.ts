@@ -561,7 +561,9 @@ const getProblemSuggestions = async (
 		where: {
 			deletedAt: null,
 			id: { notIn: attachedIds },
-			OR: [{ companyId: assessment.companyId }, { companyId: null }],
+			// Only the company's own problems: those are the ones attachProblems
+			// accepts, so every suggestion can actually be added.
+			companyId: assessment.companyId,
 		},
 		// Newest first, so equally good plans favour fresh problems
 		orderBy: [{ createdAt: "desc" }, { id: "asc" }],

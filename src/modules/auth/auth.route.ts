@@ -34,7 +34,12 @@ router.post(
 	authController.resendOtp,
 );
 
-router.post("/google", authController.googleLogin);
+router.post(
+	"/google",
+	rateLimiter("auth"),
+	validateRequest(authValidation.googleLoginValidationSchema),
+	authController.googleLogin,
+);
 
 router.post(
 	"/refresh-token",

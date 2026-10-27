@@ -450,19 +450,29 @@ const adjustCredits = async (
 			throw createError(404, "Company not found");
 		}
 
-		const newBalance = company.creditBalance + payload.amount;
+		// Atomic increment with the floor in the WHERE clause, so a concurrent
+		// invitation debit or Stripe purchase is never overwritten.
+		const adjusted = await tx.company.updateMany({
+			where: {
+				id: payload.companyId,
+				...(payload.amount < 0 && {
+					creditBalance: { gte: -payload.amount },
+				}),
+			},
+			data: { creditBalance: { increment: payload.amount } },
+		});
 
-		if (newBalance < 0) {
+		if (adjusted.count === 0) {
 			throw createError(
 				400,
 				`Adjustment would result in a negative balance (current: ${company.creditBalance})`,
 			);
 		}
 
-		const updatedCompany = await tx.company.update({
+		const updatedCompany = await tx.company.findUniqueOrThrow({
 			where: { id: payload.companyId },
-			data: { creditBalance: newBalance },
 		});
+		const newBalance = updatedCompany.creditBalance;
 
 		await tx.creditTransaction.create({
 			data: {

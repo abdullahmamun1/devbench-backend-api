@@ -1,7 +1,13 @@
 import { z } from "zod";
 
 const createInvitationValidationSchema = z.object({
-	candidateEmail: z.email("Invalid email"),
+	// Lower-cased like every stored account email, so the invite matches the
+	// candidate's account however the address was typed.
+	candidateEmail: z
+		.string()
+		.trim()
+		.toLowerCase()
+		.pipe(z.email("Invalid email")),
 });
 
 // name/password are optional at the schema level because an already-logged-in

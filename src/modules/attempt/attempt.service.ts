@@ -203,24 +203,46 @@ const upsertSubmission = async (
 
 	attemptUtil.validateAnswerShape(assessmentProblem.problem.type, payload);
 
-	return prisma.submission.upsert({
-		where: {
-			attemptId_problemId: { attemptId, problemId: payload.problemId },
-		},
-		create: {
-			attemptId,
-			problemId: payload.problemId,
-			selectedOptionId: payload.selectedOptionId,
-			answerText: payload.answerText,
-			code: payload.code,
-			language: payload.language,
-		},
-		update: {
-			selectedOptionId: payload.selectedOptionId ?? null,
-			answerText: payload.answerText ?? null,
-			code: payload.code ?? null,
-			language: payload.language ?? null,
-		},
+	if (payload.selectedOptionId) {
+		const option = await prisma.mcqOption.findFirst({
+			where: { id: payload.selectedOptionId, problemId: payload.problemId },
+			select: { id: true },
+		});
+		if (!option) {
+			throw createError(400, "This option does not belong to this problem");
+		}
+	}
+
+	return prisma.$transaction(async (tx) => {
+		// Lock the attempt while saving, so an answer can't land after
+		// finalizeAttempt has graded it (finalize holds the same row lock).
+		const open = await tx.attempt.updateMany({
+			where: { id: attemptId, status: "IN_PROGRESS" },
+			data: { status: "IN_PROGRESS" },
+		});
+		if (open.count === 0) {
+			throw createError(400, "This attempt has already been submitted");
+		}
+
+		return tx.submission.upsert({
+			where: {
+				attemptId_problemId: { attemptId, problemId: payload.problemId },
+			},
+			create: {
+				attemptId,
+				problemId: payload.problemId,
+				selectedOptionId: payload.selectedOptionId,
+				answerText: payload.answerText,
+				code: payload.code,
+				language: payload.language,
+			},
+			update: {
+				selectedOptionId: payload.selectedOptionId ?? null,
+				answerText: payload.answerText ?? null,
+				code: payload.code ?? null,
+				language: payload.language ?? null,
+			},
+		});
 	});
 };
 

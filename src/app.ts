@@ -13,6 +13,10 @@ import { rootRouter } from "./routes";
 
 const app: Application = express();
 
+// One proxy hop (Vercel's edge) sits in front of the API, so req.ip is the
+// address it reports rather than a client-supplied X-Forwarded-For value.
+app.set("trust proxy", 1);
+
 app.use("/api/v1/payments/webhook", express.raw({ type: "application/json" }));
 app.use(helmet());
 app.use(

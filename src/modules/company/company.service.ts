@@ -27,6 +27,10 @@ const createCompany = async (
 	if (user.companyId) {
 		throw createError(400, "You already belong to a company");
 	}
+	// Creating a company makes the caller its owner, which would demote an admin.
+	if (user.role === "ADMIN") {
+		throw createError(403, "Platform admins can't create a company");
+	}
 
 	return await prisma.$transaction(async (tx) => {
 		const company = await tx.company.create({
@@ -159,6 +163,9 @@ const inviteTeamMember = async (
 	if (existingUser?.companyId) {
 		throw createError(400, "This user already belongs to a company");
 	}
+	if (existingUser?.role === "ADMIN") {
+		throw createError(400, "Platform admins can't join a company team");
+	}
 
 	const pendingInvite = await prisma.teamInvitation.findFirst({
 		where: {
@@ -257,7 +264,7 @@ const acceptTeamInvitation = async (
 			}
 
 			const existingAccount = await tx.user.findUnique({
-				where: { email: invitation.email },
+				where: { email: invitation.email.toLowerCase() },
 			});
 			if (existingAccount) {
 				throw createError(
@@ -274,7 +281,7 @@ const acceptTeamInvitation = async (
 			const newUser = await tx.user.create({
 				data: {
 					name: registerPayload.name,
-					email: invitation.email,
+					email: invitation.email.toLowerCase(),
 					passwordHash,
 					role: invitation.role,
 					emailVerified: true,
@@ -292,8 +299,22 @@ const acceptTeamInvitation = async (
 				throw createError(404, "User not found");
 			}
 
-			if (existing.email !== invitation.email) {
+			if (existing.email.toLowerCase() !== invitation.email.toLowerCase()) {
 				throw createError(403, "This invitation was sent to a different email");
+			}
+			// Checked again here, not just when the invite was sent: the user may
+			// have created or joined a company since then.
+			if (existing.role === "ADMIN") {
+				throw createError(403, "Platform admins can't join a company team");
+			}
+			if (existing.companyId === invitation.companyId) {
+				throw createError(409, "You are already a member of this company");
+			}
+			if (existing.companyId) {
+				throw createError(
+					409,
+					"Your account already belongs to another company. Leave it before joining this team.",
+				);
 			}
 
 			await tx.user.update({
@@ -305,10 +326,14 @@ const acceptTeamInvitation = async (
 			});
 		}
 
-		await tx.teamInvitation.update({
-			where: { id: invitation.id },
+		// Conditional update so two concurrent accepts can't both succeed.
+		const accepted = await tx.teamInvitation.updateMany({
+			where: { id: invitation.id, status: "PENDING" },
 			data: { status: "ACCEPTED" },
 		});
+		if (accepted.count === 0) {
+			throw createError(400, "This invitation is no longer valid");
+		}
 
 		await writeAuditLog(
 			{

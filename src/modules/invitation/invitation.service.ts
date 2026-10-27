@@ -45,7 +45,10 @@ const createInvitation = async (
 			const existingInvitation = await tx.invitation.findFirst({
 				where: {
 					assessmentId,
-					candidateEmail: payload.candidateEmail,
+					candidateEmail: {
+						equals: payload.candidateEmail,
+						mode: "insensitive",
+					},
 				},
 			});
 
@@ -200,7 +203,11 @@ const getMyInvitations = async (
 ) => {
 	return prisma.invitation.findMany({
 		where: {
-			OR: [{ candidateId }, { candidateEmail }],
+			OR: [
+				{ candidateId },
+				// Older invites may have been stored with the address as typed.
+				{ candidateEmail: { equals: candidateEmail, mode: "insensitive" } },
+			],
 		},
 		orderBy: { createdAt: "desc" },
 		select: {
@@ -275,6 +282,8 @@ const acceptInvitation = async (
 		throw createError(410, "This invitation has expired");
 	}
 
+	const candidateEmail = invitation.candidateEmail.toLowerCase();
+
 	return await prisma.$transaction(async (tx) => {
 		let candidateId = userId;
 
@@ -288,7 +297,7 @@ const acceptInvitation = async (
 				throw createError(404, "User not found");
 			}
 
-			if (existingUser.email !== invitation.candidateEmail) {
+			if (existingUser.email.toLowerCase() !== candidateEmail) {
 				throw createError(403, "This invitation was sent to a different email");
 			}
 
@@ -308,7 +317,7 @@ const acceptInvitation = async (
 			}
 
 			const existingByEmail = await tx.user.findUnique({
-				where: { email: invitation.candidateEmail },
+				where: { email: candidateEmail },
 			});
 
 			if (existingByEmail) {
@@ -326,7 +335,7 @@ const acceptInvitation = async (
 			const newUser = await tx.user.create({
 				data: {
 					name: registerPayload.name,
-					email: invitation.candidateEmail,
+					email: candidateEmail,
 					passwordHash,
 					role: "CANDIDATE",
 					emailVerified: true,
@@ -336,10 +345,14 @@ const acceptInvitation = async (
 			candidateId = newUser.id;
 		}
 
-		await tx.invitation.update({
-			where: { id: invitation.id },
+		// Conditional update so two concurrent accepts can't both succeed.
+		const accepted = await tx.invitation.updateMany({
+			where: { id: invitation.id, status: "PENDING" },
 			data: { status: "ACCEPTED", candidateId },
 		});
+		if (accepted.count === 0) {
+			throw createError(400, "This invitation is no longer valid");
+		}
 
 		await writeAuditLog(
 			{

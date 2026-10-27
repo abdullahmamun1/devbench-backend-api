@@ -9,6 +9,14 @@ import type {
 	IUpdateProblemPayload,
 } from "./problem.interface";
 
+const PROBLEM_SORT_FIELDS = [
+	"createdAt",
+	"updatedAt",
+	"title",
+	"points",
+	"type",
+];
+
 const createProblem = async (
 	payload: ICreateProblemPayload,
 	caller: ICallerInfo,
@@ -75,8 +83,12 @@ const getAllProblems = async (
 	const page = Number(query.page) || 1;
 	const limit = Number(query.limit) || 10;
 	const skip = (page - 1) * limit;
-	const sortBy = query.sortBy || "createdAt";
-	const sortOrder = query.sortOrder || "desc";
+	// Only known columns, so a query string can't order by relations or fail.
+	const sortBy =
+		query.sortBy && PROBLEM_SORT_FIELDS.includes(query.sortBy)
+			? query.sortBy
+			: "createdAt";
+	const sortOrder = query.sortOrder === "asc" ? "asc" : "desc";
 
 	const where: Prisma.ProblemWhereInput = {
 		deletedAt: null,
@@ -203,15 +215,39 @@ const updateProblem = async (
 		}
 
 		if (payload.mcqOptions) {
-			await tx.mcqOption.deleteMany({ where: { problemId: id } });
-			await tx.mcqOption.createMany({
-				data: payload.mcqOptions.map((opt) => ({
-					problemId: id,
+			// Update options in place, matched by position, so answers that
+			// candidates already chose keep pointing at their option. Recreating
+			// them would null every Submission.selectedOptionId.
+			const current = await tx.mcqOption.findMany({
+				where: { problemId: id },
+				orderBy: { order: "asc" },
+				include: { _count: { select: { submissions: true } } },
+			});
+			const removed = current.slice(payload.mcqOptions.length);
+			if (removed.some((opt) => opt._count.submissions > 0)) {
+				throw createError(
+					400,
+					"Candidates have already chosen an option you removed. Edit its text instead of removing it.",
+				);
+			}
+
+			for (const [i, opt] of payload.mcqOptions.entries()) {
+				const data = {
 					text: opt.text,
 					isCorrect: opt.isCorrect ?? false,
 					order: opt.order,
-				})),
-			});
+				};
+				if (current[i]) {
+					await tx.mcqOption.update({ where: { id: current[i].id }, data });
+				} else {
+					await tx.mcqOption.create({ data: { ...data, problemId: id } });
+				}
+			}
+			if (removed.length > 0) {
+				await tx.mcqOption.deleteMany({
+					where: { id: { in: removed.map((opt) => opt.id) } },
+				});
+			}
 		}
 
 		const updatedProblem = await tx.problem.update({

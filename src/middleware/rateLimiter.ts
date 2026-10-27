@@ -27,13 +27,11 @@ const contactLimiter = new Ratelimit({
 	prefix: "@ratelimit/contact",
 });
 
-const getClientIp = (req: Request): string => {
-	const forwarded = req.headers["x-forwarded-for"];
-	if (typeof forwarded === "string") {
-		return forwarded.split(",")[0].trim();
-	}
-	return req.ip || req.socket.remoteAddress || "127.0.0.1";
-};
+// req.ip honours app's "trust proxy" setting, so it is the address our own
+// proxy saw. The first X-Forwarded-For entry is set by the client and can be
+// changed on every request to get a fresh limit.
+const getClientIp = (req: Request): string =>
+	req.ip || req.socket.remoteAddress || "127.0.0.1";
 
 export const rateLimiter = (
 	type: "standard" | "auth" | "contact" = "standard",

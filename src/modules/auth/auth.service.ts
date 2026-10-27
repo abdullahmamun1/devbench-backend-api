@@ -29,11 +29,35 @@ import type {
 
 type UserWithCompany = Prisma.UserGetPayload<{ include: { company: true } }>;
 
+const MAX_OTP_ATTEMPTS = 5;
+const otpAttemptsKey = (key: string) => `${key}:attempts`;
+
+// Checks a 6-digit code and deletes it once used. After MAX_OTP_ATTEMPTS wrong
+// guesses the code is discarded, so it can't be brute-forced even by a caller
+// that gets past the IP rate limit.
+const consumeOtp = async (key: string, otp: string) => {
+	const stored = await redis.get(key);
+	if (stored === null) {
+		throw createError(400, "Invalid or expired OTP");
+	}
+	if (String(stored) !== otp) {
+		const attempts = await redis.incr(otpAttemptsKey(key));
+		if (attempts === 1) await redis.expire(otpAttemptsKey(key), 60 * 60);
+		if (attempts >= MAX_OTP_ATTEMPTS) {
+			await redis.del(key, otpAttemptsKey(key));
+			throw createError(429, "Too many wrong codes. Please request a new one.");
+		}
+		throw createError(400, "OTP does not match");
+	}
+	await redis.del(key, otpAttemptsKey(key));
+};
+
 // Creates a fresh 6-digit code (replacing any previous one) and emails it.
 const sendRegistrationOtp = async (email: string, name: string) => {
 	const ttlSeconds = Number(config.registration_otp_ttl_seconds);
 	const otpValue = crypto.randomInt(100000, 1000000).toString();
 	await redis.set(`register-otp:${email}`, otpValue, { ex: ttlSeconds });
+	await redis.del(otpAttemptsKey(`register-otp:${email}`));
 
 	const templatePath = path.join(
 		process.cwd(),
@@ -191,18 +215,7 @@ const verifyEmail = async (payload: IVerifyEmailPayload) => {
 		throw createError(403, "This account has been deleted");
 	}
 
-	const otpKey = `register-otp:${email}`;
-	const storedOtpRaw = await redis.get(otpKey);
-	const storedOtp = storedOtpRaw !== null ? String(storedOtpRaw) : null;
-
-	if (!storedOtp) {
-		throw createError(400, "Invalid or expired OTP");
-	}
-	if (storedOtp !== otp) {
-		throw createError(400, "OTP does not match");
-	}
-
-	await redis.del(otpKey);
+	await consumeOtp(`register-otp:${email}`, otp);
 
 	const verifiedUser = await prisma.user.update({
 		where: { id: user.id },
@@ -355,11 +368,16 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
 	if (!googleIdTokenPayload.email) {
 		throw createError(401, "Google Email Not Found");
 	}
+	// Only a Google-verified address may sign in or link to an existing
+	// account with the same email; otherwise anyone could claim that account.
+	if (googleIdTokenPayload.email_verified !== true) {
+		throw createError(401, "Your Google email address is not verified");
+	}
 	if (!googleIdTokenPayload.name) {
 		throw createError(401, "Google Account User Name Not Found");
 	}
 
-	const googleEmail = googleIdTokenPayload.email;
+	const googleEmail = googleIdTokenPayload.email.trim().toLowerCase();
 	const googleSubId = googleIdTokenPayload.sub;
 
 	const existingUser = await prisma.user.findUnique({
@@ -533,6 +551,7 @@ const refreshToken = async (incomingToken: string) => {
 	if (
 		!user ||
 		user.status === "SUSPENDED" ||
+		user.status === "DELETED" ||
 		user.company?.status === "SUSPENDED"
 	) {
 		throw createError(403, "Account unavailable");
@@ -590,6 +609,7 @@ const forgotPassword = async (payload: IForgotPasswordPayload) => {
 	await redis.set(key, otp, {
 		ex: Number(config.forgot_password_otp_ttl_seconds),
 	});
+	await redis.del(otpAttemptsKey(key));
 
 	const templatePath = path.join(
 		process.cwd(),
@@ -637,16 +657,7 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
 		);
 	}
 
-	const key = `forgot-password-otp:${user.email}`;
-	const storedOtpRaw = await redis.get(key);
-	const storedOtp = storedOtpRaw !== null ? String(storedOtpRaw) : null;
-
-	if (!storedOtp) {
-		throw createError(400, "Invalid or expired OTP");
-	}
-	if (storedOtp !== otp) {
-		throw createError(400, "OTP does not match");
-	}
+	await consumeOtp(`forgot-password-otp:${user.email}`, otp);
 
 	const passwordHash = await bcrypt.hash(
 		newPassword,
@@ -666,7 +677,8 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
 		entityId: user.id,
 	});
 
-	await redis.del(key);
+	// A new password signs out every existing session.
+	await revokeRefreshToken(user.id);
 
 	const templatePath = path.join(
 		process.cwd(),

@@ -176,8 +176,16 @@ const gradeSubmission = async (
 			);
 		}
 
-		const updatedResult = await tx.submissionResult.update({
-			where: { id: submissionResultId },
+		// Lock the attempt so grades on the same attempt run one at a time.
+		// Without it, two evaluators finishing the last two results would each
+		// still see the other as pending and leave totalScore null for good.
+		const attemptId = result.submission.attemptId;
+		await tx.$queryRaw`SELECT id FROM "Attempt" WHERE id = ${attemptId} FOR UPDATE`;
+
+		// Conditional update: if someone else graded this result meanwhile,
+		// nothing matches and the earlier grade stands.
+		const graded = await tx.submissionResult.updateMany({
+			where: { id: submissionResultId, status: "PENDING_REVIEW" },
 			data: {
 				score: payload.score,
 				status: payload.status,
@@ -186,10 +194,18 @@ const gradeSubmission = async (
 				evaluatedAt: new Date(),
 			},
 		});
+		if (graded.count === 0) {
+			throw createError(
+				409,
+				"This submission has already been graded and cannot be changed",
+			);
+		}
+		const updatedResult = await tx.submissionResult.findUniqueOrThrow({
+			where: { id: submissionResultId },
+		});
 
 		// Recompute the parent Attempt's totalScore only once nothing on it is
 		// still PENDING_REVIEW — same rule as the auto-grade path in Attempt.
-		const attemptId = result.submission.attemptId;
 		const siblingResults = await tx.submissionResult.findMany({
 			where: { submission: { attemptId } },
 			select: { score: true, status: true },
